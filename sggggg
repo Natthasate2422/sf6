@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart SF6 Management Dashboard - EGAT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500 p-2 rounded-lg text-slate-950 font-bold">
+                <i class="fa-solid fa-bolt text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-emerald-400 leading-tight">SMART SF6 LEAKAGE & REGENERATION SYSTEM</h1>
+                <p class="text-xs text-slate-400">ระบบตรวจวัด พยากรณ์ และบริหารจัดการฟื้นฟูสภาพก๊าซ SF6 อัจฉริยะ (กฟผ.)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4 mt-2 sm:mt-0">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 mr-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                LoRaWAN / NB-IoT Connected
+            </span>
+            <div class="text-xs text-slate-400 border-l border-slate-700 pl-4">
+                ทีม: <span class="text-slate-200 font-semibold">ฝั่งธนไม่หมูอะบูดาบี</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 shadow-lg">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">สถานะรวม GIS Substation</p>
+                        <h3 class="text-2xl font-bold text-white mt-1">ปกติ (Normal)</h3>
+                    </div>
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-emerald-400 mt-3 flex items-center">
+                    <i class="fa-solid fa-circle-check mr-1"></i> AI Predictive: ไม่พบจุดรั่ววิกฤต
+                </p>
+            </div>
+
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 shadow-lg">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">ปริมาณก๊าซ SF6 ที่กู้คืนได้</p>
+                        <h3 class="text-2xl font-bold text-cyan-400 mt-1">20.0 <span class="text-sm font-normal text-
