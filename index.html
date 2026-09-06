@@ -50,18 +50,15 @@
             </div>
             
             <div class="flex items-center space-x-1.5 sm:space-x-2">
-                <!-- ปุ่มสลับแถบจำลองค่า (Simulation Panel Toggle) ไว้ข้างปุ่มเปลี่ยนภาษา -->
                 <button onclick="toggleSimPanel()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
                     <i class="fa-solid fa-sliders"></i>
-                    <span class="hidden sm:inline" data-i18n="btn_sim">จำลองค่า</span>
+                    <span class="hidden sm:inline" data-i18n="btn_sim">จำลองค่า & คำนวณความเสียหาย</span>
                 </button>
 
-                <!-- ปุ่มเปลี่ยนภาษา TH / EN / ZH -->
                 <button onclick="toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
                     <span id="lang-btn-text">TH</span>
                 </button>
 
-                <!-- ปุ่มเปลี่ยน Theme Dark/Light -->
                 <button onclick="toggleTheme()" class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
                     <i id="theme-icon" class="fa-solid fa-moon text-amber-500"></i>
                 </button>
@@ -69,21 +66,21 @@
         </div>
     </header>
 
-    <!-- Interactive Simulation Bar (ซ่อน/แสดงได้โดยกดปุ่มจำลองค่าข้างๆ ปุ่มเปลี่ยนภาษา) -->
-    <section id="sim-panel" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-3 shadow-inner border-b border-indigo-500/30">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex items-center justify-between mb-2">
+    <!-- Interactive Simulation & Financial Damage Calculator Panel -->
+    <section id="sim-panel" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-4 shadow-inner border-b border-indigo-500/30">
+        <div class="max-w-7xl mx-auto space-y-3">
+            <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-sliders"></i> <span data-i18n="sim_title">แผงควบคุมการจำลองค่า (Interactive Simulator)</span>
+                    <i class="fa-solid fa-calculator"></i> <span data-i18n="sim_title">แผงจำลองค่าและคำนวณมูลค่าความเสียหายจากการรั่วไหล (Leakage Damage Calculator)</span>
                 </span>
                 <button onclick="resetSimulation()" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded text-slate-200 transition">
                     <i class="fa-solid fa-rotate-left mr-1"></i><span data-i18n="sim_reset">รีเซ็ตค่า</span>
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 <!-- Slider 1: Pressure -->
-                <div>
+                <div class="bg-white/5 p-2.5 rounded-lg border border-white/10">
                     <div class="flex justify-between text-[11px] mb-1">
                         <span class="text-slate-300" data-i18n="sim_press">ความดัน SF6 (Bar):</span>
                         <span id="sim-press-val" class="font-bold text-amber-300">6.12 Bar</span>
@@ -92,21 +89,33 @@
                 </div>
 
                 <!-- Slider 2: Purity -->
-                <div>
+                <div class="bg-white/5 p-2.5 rounded-lg border border-white/10">
                     <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300" data-i18n="sim_purity">ความบริสุทธิ์ (Purity %):</span>
+                        <span class="text-slate-300" data-i18n="sim_purity">ความบริสุทธิ์ (%):</span>
                         <span id="sim-purity-val" class="font-bold text-emerald-300">99.2 %</span>
                     </div>
                     <input type="range" id="sim-purity" min="95.0" max="100.0" step="0.1" value="99.2" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">
                 </div>
 
-                <!-- Slider 3: Moisture -->
-                <div>
+                <!-- Slider 3: Leak Rate (อัตราการรั่วไหล) -->
+                <div class="bg-white/5 p-2.5 rounded-lg border border-white/10">
                     <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300" data-i18n="sim_moist">ความชื้น (Moisture ppmv):</span>
-                        <span id="sim-moist-val" class="font-bold text-sky-300">18 ppmv</span>
+                        <span class="text-slate-300" data-i18n="sim_leak">อัตราก๊าซรั่วซึม (kg/เดือน):</span>
+                        <span id="sim-leak-val" class="font-bold text-rose-300">1.5 kg/m</span>
                     </div>
-                    <input type="range" id="sim-moist" min="5" max="40" step="1" value="18" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                    <input type="range" id="sim-leak" min="0.0" max="10.0" step="0.1" value="1.5" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-400">
+                </div>
+
+                <!-- Calculated Financial Loss Display -->
+                <div class="bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-lg flex flex-col justify-center">
+                    <div class="text-[10px] text-rose-300 font-medium" data-i18n="sim_loss_label">ประเมินมูลค่าความเสียหายทางการเงิน:</div>
+                    <div class="flex items-baseline gap-1 mt-0.5">
+                        <span id="loss-cost-val" class="text-base font-bold text-rose-400">฿21,600</span>
+                        <span class="text-[10px] text-slate-300" data-i18n="per_year">/ปี</span>
+                    </div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">
+                        <span data-i18n="sim_loss_co2">สูญเสียเทียบเท่า CO₂:</span> <span id="loss-co2-val" class="text-amber-300 font-semibold">423 tCO₂e</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,7 +144,6 @@
         <!-- Key Indicators Grid -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             
-            <!-- Metric 1: System Status -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
                 <div class="flex justify-between items-start">
                     <div>
@@ -151,7 +159,6 @@
                 </p>
             </div>
 
-            <!-- Metric 2: SF6 Recovered -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
                 <div class="flex justify-between items-start">
                     <div>
@@ -167,7 +174,6 @@
                 </p>
             </div>
 
-            <!-- Metric 3: Carbon Offset -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
                 <div class="flex justify-between items-start">
                     <div>
@@ -183,7 +189,6 @@
                 </p>
             </div>
 
-            <!-- Metric 4: Cost Savings -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
                 <div class="flex justify-between items-start">
                     <div>
@@ -204,18 +209,28 @@
         <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             
-            <!-- Real-time Chart -->
+            <!-- Real-time Predictive Chart with Selector for GIS Compartments -->
             <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
                 <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-egat-blue dark:text-amber-400"></i>
-                        <span data-i18n="chart_title">พยากรณ์ความดันก๊าซ SF6 (AI Predictive)</span>
-                    </h2>
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line text-egat-blue dark:text-amber-400"></i>
+                            <span data-i18n="chart_title">พยากรณ์ความดันก๊าซ (AI Predictive)</span>
+                        </h2>
+
+                        <!-- Dropdown เลือกตู้ GIS สำหรับดูพยากรณ์ -->
+                        <select id="chart-node-select" onchange="switchChartNode()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-lg px-2 py-1 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="Bay 01 - CB-01">Bay 01 - CB-01</option>
+                            <option value="Bay 02 - DS-02">Bay 02 - DS-02</option>
+                        </select>
+                    </div>
+
                     <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px]">
                         <button onclick="updateChartRange('7D')" id="btn-7d" class="px-2 py-0.5 rounded font-semibold bg-white dark:bg-slate-700 text-egat-blue dark:text-amber-400 shadow-sm">7D</button>
                         <button onclick="updateChartRange('30D')" id="btn-30d" class="px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">30D</button>
                     </div>
                 </div>
+                
                 <div class="h-56 sm:h-64 w-full">
                     <canvas id="pressureChart"></canvas>
                 </div>
@@ -231,7 +246,6 @@
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3" data-i18n="quality_subtitle">ตามมาตรฐาน IEC 60376</p>
                     
                     <div class="space-y-3">
-                        <!-- Purity -->
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="text-slate-600 dark:text-slate-300" data-i18n="purity_label">ความบริสุทธิ์</span>
@@ -242,7 +256,6 @@
                             </div>
                         </div>
 
-                        <!-- Moisture -->
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="text-slate-600 dark:text-slate-300" data-i18n="moisture_label">ความชื้น</span>
@@ -253,7 +266,6 @@
                             </div>
                         </div>
 
-                        <!-- Acid Gases -->
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="text-slate-600 dark:text-slate-300" data-i18n="acid_label">ก๊าซกรดพิษ</span>
@@ -280,7 +292,6 @@
         <!-- Table & Asset Tracking -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             
-            <!-- Table Section (พร้อมปุ่มเพิ่มตู้ก๊าซ GIS) -->
             <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                     <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
@@ -291,7 +302,6 @@
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <input type="text" id="search-input" onkeyup="filterTable()" placeholder="ค้นหา..." class="w-full sm:w-36 pl-3 pr-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
                         
-                        <!-- ปุ่มเปิด Modal เพิ่มตู้ก๊าซ -->
                         <button onclick="openAddGisModal()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1 transition shadow-sm">
                             <i class="fa-solid fa-plus"></i>
                             <span data-i18n="btn_add_gis">เพิ่มตู้ GIS</span>
@@ -316,14 +326,21 @@
                                 <td id="tbl-press-1" class="p-2.5 text-emerald-600 dark:text-emerald-400 font-bold font-mono">6.20 Bar</td>
                                 <td class="p-2.5">34.5 °C</td>
                                 <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium" data-i18n="st_normal">ปกติ</span></td>
-                                <td class="p-2.5 text-slate-400">-</td>
+                                <td class="p-2.5">
+                                    <button onclick="viewNodeChart('Bay 01 - CB-01')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded text-[10px] font-semibold">
+                                        <i class="fa-solid fa-chart-line mr-1"></i>ดูพยากรณ์
+                                    </button>
+                                </td>
                             </tr>
                             <tr>
                                 <td class="p-2.5 font-semibold">Bay 02 - DS-02</td>
                                 <td id="tbl-press-2" class="p-2.5 text-amber-600 dark:text-amber-400 font-bold font-mono">5.85 Bar</td>
                                 <td class="p-2.5">36.1 °C</td>
                                 <td class="p-2.5"><span id="tbl-status-2" class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold" data-i18n="st_warning">เฝ้าระวัง</span></td>
-                                <td class="p-2.5">
+                                <td class="p-2.5 flex items-center gap-1">
+                                    <button onclick="viewNodeChart('Bay 02 - DS-02')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded text-[10px] font-semibold">
+                                        <i class="fa-solid fa-chart-line mr-1"></i>ดูพยากรณ์
+                                    </button>
                                     <button onclick="issueJobOrder('Bay 02 - DS-02')" class="px-2 py-1 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded text-[10px] font-semibold" data-i18n="btn_job">
                                         ออก Job
                                     </button>
@@ -405,7 +422,7 @@
         </div>
     </div>
 
-    <!-- Mobile Navigation Bar (เมนูด้านล่างสำหรับมือถือ) -->
+    <!-- Mobile Navigation Bar -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-2 px-3 z-50 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-0.5 text-egat-blue dark:text-amber-400">
             <i class="fa-solid fa-gauge text-base"></i>
@@ -433,7 +450,18 @@
 
     <!-- JavaScript Scripting -->
     <script>
-        // Theme Toggle
+        // Data Store for Node Predictions
+        const nodeChartData = {
+            'Bay 01 - CB-01': {
+                actual: [6.25, 6.24, 6.23, 6.22, 6.21, 6.20, null],
+                predict: [null, null, null, null, null, 6.20, 6.18],
+            },
+            'Bay 02 - DS-02': {
+                actual: [6.15, 6.08, 6.01, 5.95, 5.90, 5.85, null],
+                predict: [null, null, null, null, null, 5.85, 5.76],
+            }
+        };
+
         function toggleTheme() {
             const html = document.documentElement;
             const icon = document.getElementById('theme-icon');
@@ -446,24 +474,25 @@
             }
         }
 
-        // Toggle Simulation Panel
         function toggleSimPanel() {
             const panel = document.getElementById('sim-panel');
             panel.classList.toggle('hidden');
         }
 
-        // Translation System (TH / EN / ZH)
+        // Translation System
         let currentLang = 'TH';
         const translations = {
             TH: {
                 app_title: "SMART SF6 SYSTEM",
                 app_subtitle: "ระบบตรวจวัดและฟื้นฟูสภาพก๊าซ SF6 อัจฉริยะ (กฟผ.)",
-                btn_sim: "จำลองค่า",
-                sim_title: "แผงควบคุมการจำลองค่า (Interactive Simulator)",
+                btn_sim: "จำลองค่า & คำนวณความเสียหาย",
+                sim_title: "แผงจำลองค่าและคำนวณมูลค่าความเสียหายจากการรั่วไหล (Leakage Damage Calculator)",
                 sim_reset: "รีเซ็ตค่า",
                 sim_press: "ความดัน SF6 (Bar):",
-                sim_purity: "ความบริสุทธิ์ (Purity %):",
-                sim_moist: "ความชื้น (Moisture ppmv):",
+                sim_purity: "ความบริสุทธิ์ (%):",
+                sim_leak: "อัตราก๊าซรั่วซึม (kg/เดือน):",
+                sim_loss_label: "ประเมินมูลค่าความเสียหายทางการเงิน:",
+                sim_loss_co2: "สูญเสียเทียบเท่า CO₂:",
                 export_header: "ศูนย์ส่งออกข้อมูลและสรุปรายงาน",
                 export_desc: "ดาวน์โหลดข้อมูลสถานะอุปกรณ์และการกู้คืนก๊าซ",
                 kpi_status_label: "สถานะรวม GIS",
@@ -476,7 +505,7 @@
                 kpi_roi_sub: "คืนทุน ~20 เดือน",
                 per_year: "/ปี",
                 unit_kg_yr: "kg/ปี",
-                chart_title: "พยากรณ์ความดันก๊าซ SF6 (AI Predictive)",
+                chart_title: "พยากรณ์ความดันก๊าซ (AI Predictive)",
                 quality_title: "ผลการตรวจวัดคุณภาพก๊าซ",
                 quality_subtitle: "ตามมาตรฐาน IEC 60376",
                 purity_label: "ความบริสุทธิ์",
@@ -516,12 +545,14 @@
             EN: {
                 app_title: "SMART SF6 SYSTEM",
                 app_subtitle: "Smart Monitoring & Regeneration System for SF6 (EGAT)",
-                btn_sim: "Simulate",
-                sim_title: "Interactive Simulator Panel",
+                btn_sim: "Simulate & Loss Calc",
+                sim_title: "Leakage Financial Damage & Simulation Panel",
                 sim_reset: "Reset",
                 sim_press: "SF6 Pressure (Bar):",
                 sim_purity: "Purity (%):",
-                sim_moist: "Moisture (ppmv):",
+                sim_leak: "Leakage Rate (kg/mo):",
+                sim_loss_label: "Estimated Financial Damage:",
+                sim_loss_co2: "CO₂ Equivalent Loss:",
                 export_header: "Export & Report Center",
                 export_desc: "Download equipment and gas recovery summary data",
                 kpi_status_label: "Overall GIS Status",
@@ -534,7 +565,7 @@
                 kpi_roi_sub: "Payback ~20 Months",
                 per_year: "/yr",
                 unit_kg_yr: "kg/yr",
-                chart_title: "SF6 Pressure AI Predictive",
+                chart_title: "Gas Pressure AI Predictive",
                 quality_title: "Gas Quality Analysis",
                 quality_subtitle: "IEC 60376 Standard",
                 purity_label: "Purity",
@@ -574,12 +605,14 @@
             ZH: {
                 app_title: "智能 SF6 管理系统",
                 app_subtitle: "SF6 气体智能监测与再生系统 (EGAT)",
-                btn_sim: "模拟器",
-                sim_title: "交互式模拟控制面板 (Interactive Simulator)",
-                sim_reset: "重置参数",
+                btn_sim: "模拟与损失计算",
+                sim_title: "气体泄漏损失计算与模拟面板",
+                sim_reset: "重置",
                 sim_press: "SF6 压力 (Bar):",
-                sim_purity: "纯度 (Purity %):",
-                sim_moist: "湿度 (Moisture ppmv):",
+                sim_purity: "纯度 (%):",
+                sim_leak: "泄漏率 (kg/月):",
+                sim_loss_label: "预估财务损失:",
+                sim_loss_co2: "二氧化碳当量损失:",
                 export_header: "数据导出与报告中心",
                 export_desc: "下载设备状态与气体回收汇总报告",
                 kpi_status_label: "GIS 总体状态",
@@ -592,15 +625,15 @@
                 kpi_roi_sub: "投资回收期 ~20 个月",
                 per_year: "/年",
                 unit_kg_yr: "kg/年",
-                chart_title: "SF6 压力 AI 预测分析",
-                quality_title: "气体质量检测结果",
-                quality_subtitle: "基于 IEC 60376 标准",
+                chart_title: "SF6 压力 AI 预测",
+                quality_title: "气体质量检测",
+                quality_subtitle: "IEC 60376 标准",
                 purity_label: "纯度",
                 moisture_label: "湿度",
                 acid_label: "酸性毒性气体",
                 treatment_label: "净化状态:",
                 treatment_val: "合格 可重新充入",
-                table_title: "GIS 变电站气室实时状态",
+                table_title: "GIS 变电站气室状态",
                 btn_add_gis: "添加 GIS 气室",
                 th_device: "GIS 气室",
                 th_pressure: "压力",
@@ -611,7 +644,7 @@
                 st_warning: "预警",
                 st_critical: "严重",
                 btn_job: "派工单",
-                tracking_title: "循环气瓶追踪 (Circular Tracking)",
+                tracking_title: "循环气瓶追踪",
                 lbl_cyl_id: "气瓶编号:",
                 lbl_cyl_proc: "气瓶状态:",
                 cyl_ready: "准备就绪",
@@ -651,13 +684,30 @@
             data: {
                 labels: ['1 Mar', '2 Mar', '3 Mar', '4 Mar', '5 Mar', 'Today', 'Predict'],
                 datasets: [
-                    { label: 'ความดันจริง (Bar)', data: [6.25, 6.23, 6.20, 6.18, 6.15, 6.12, null], borderColor: '#003366', backgroundColor: 'rgba(0,51,102,0.08)', borderWidth: 2, fill: true, tension: 0.3 },
-                    { label: 'AI Trend', data: [null, null, null, null, null, 6.12, 6.05], borderColor: '#f59e0b', borderDash: [4, 4], borderWidth: 2, tension: 0.3 },
+                    { label: 'ความดันจริง (Bar)', data: [...nodeChartData['Bay 02 - DS-02'].actual], borderColor: '#003366', backgroundColor: 'rgba(0,51,102,0.08)', borderWidth: 2, fill: true, tension: 0.3 },
+                    { label: 'AI Trend', data: [...nodeChartData['Bay 02 - DS-02'].predict], borderColor: '#f59e0b', borderDash: [4, 4], borderWidth: 2, tension: 0.3 },
                     { label: 'Critical Limit', data: [5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5], borderColor: '#ef4444', borderWidth: 1, pointRadius: 0 }
                 ]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
+
+        // Switch GIS Node in Chart
+        function switchChartNode() {
+            const selectedNode = document.getElementById('chart-node-select').value;
+            if (nodeChartData[selectedNode]) {
+                chart.data.datasets[0].data = [...nodeChartData[selectedNode].actual];
+                chart.data.datasets[1].data = [...nodeChartData[selectedNode].predict];
+                chart.update();
+            }
+        }
+
+        function viewNodeChart(nodeName) {
+            const select = document.getElementById('chart-node-select');
+            select.value = nodeName;
+            switchChartNode();
+            document.getElementById('pressureChart').scrollIntoView({ behavior: 'smooth' });
+        }
 
         function updateChartRange(range) {
             const btn7 = document.getElementById('btn-7d');
@@ -674,65 +724,49 @@
             chart.update();
         }
 
-        // Simulation Updates
+        // Calculation & Simulation Updates
         function updateSimulation() {
             const press = parseFloat(document.getElementById('sim-press').value);
             const purity = parseFloat(document.getElementById('sim-purity').value);
-            const moist = parseInt(document.getElementById('sim-moist').value);
+            const leakRate = parseFloat(document.getElementById('sim-leak').value); // kg/month
 
             document.getElementById('sim-press-val').innerText = press.toFixed(2) + ' Bar';
             document.getElementById('sim-purity-val').innerText = purity.toFixed(1) + ' %';
-            document.getElementById('sim-moist-val').innerText = moist + ' ppmv';
+            document.getElementById('sim-leak-val').innerText = leakRate.toFixed(1) + ' kg/m';
 
+            // Calculate Gas Loss Cost & Carbon Equivalent
+            const gasPricePerKg = 1200; // ~1,200 THB/kg
+            const yearlyLeakKg = leakRate * 12;
+            const yearlyFinancialLoss = yearlyLeakKg * gasPricePerKg;
+            const tCO2eLoss = (yearlyLeakKg * 23500) / 1000; // SF6 GWP = 23,500
+
+            document.getElementById('loss-cost-val').innerText = '฿' + yearlyFinancialLoss.toLocaleString('th-TH');
+            document.getElementById('loss-co2-val').innerText = Math.round(tCO2eLoss).toLocaleString('th-TH') + ' tCO₂e';
+
+            // Update Gas Quality Display
             document.getElementById('val-purity').innerText = `${purity.toFixed(1)}% (≥99%)`;
             document.getElementById('bar-purity').style.width = purity + '%';
 
-            document.getElementById('val-moisture').innerText = `${moist} ppmv (≤25)`;
-            document.getElementById('bar-moisture').style.width = (moist / 40 * 100) + '%';
-
-            const treatmentStatus = document.getElementById('treatment-status');
-            const treatmentIcon = document.getElementById('treatment-icon');
-            if (purity >= 99.0 && moist <= 25) {
-                treatmentStatus.innerText = translations[currentLang].treatment_val;
-                treatmentStatus.className = "text-emerald-600 dark:text-emerald-400 font-bold";
-                treatmentIcon.className = "fa-solid fa-circle-check text-emerald-500 text-lg";
-            } else {
-                treatmentStatus.innerText = currentLang === 'TH' ? "ไม่ผ่านเกณฑ์ (ต้องบำบัดเพิ่ม)" : (currentLang === 'EN' ? "Failed Standard" : "不合格 (需要处理)");
-                treatmentStatus.className = "text-rose-600 dark:text-rose-400 font-bold";
-                treatmentIcon.className = "fa-solid fa-circle-xmark text-rose-500 text-lg";
+            // Update Active Chart
+            const currentNode = document.getElementById('chart-node-select').value;
+            if (nodeChartData[currentNode]) {
+                nodeChartData[currentNode].actual[5] = press;
+                nodeChartData[currentNode].predict[5] = press;
+                nodeChartData[currentNode].predict[6] = +(press - (leakRate * 0.05)).toFixed(2);
+                
+                chart.data.datasets[0].data = [...nodeChartData[currentNode].actual];
+                chart.data.datasets[1].data = [...nodeChartData[currentNode].predict];
+                chart.update();
             }
 
-            chart.data.datasets[0].data[5] = press;
-            chart.data.datasets[1].data[5] = press;
-            chart.data.datasets[1].data[6] = +(press - 0.07).toFixed(2);
-            chart.update();
-
+            // Update Table Row 2 Press
             document.getElementById('tbl-press-2').innerText = press.toFixed(2) + ' Bar';
-            const kpiStatusText = document.getElementById('kpi-status-text');
-            const kpiStatusSub = document.getElementById('kpi-status-sub');
-            
-            if (press < 5.6) {
-                kpiStatusText.innerText = translations[currentLang].st_critical;
-                kpiStatusText.className = "text-base sm:text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5";
-                kpiStatusSub.innerHTML = "<i class='fa-solid fa-triangle-exclamation mr-1'></i> พบจุดรั่วซึมวิกฤต!";
-                kpiStatusSub.className = "text-[10px] sm:text-xs text-rose-600 dark:text-rose-400 mt-2 font-bold animate-pulse";
-            } else if (press < 5.9) {
-                kpiStatusText.innerText = translations[currentLang].st_warning;
-                kpiStatusText.className = "text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5";
-                kpiStatusSub.innerHTML = "<i class='fa-solid fa-bell mr-1'></i> ตรวจพบแรงดันตก";
-                kpiStatusSub.className = "text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-2 font-semibold";
-            } else {
-                kpiStatusText.innerText = translations[currentLang].st_normal;
-                kpiStatusText.className = "text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5";
-                kpiStatusSub.innerHTML = "<i class='fa-solid fa-circle-check mr-1'></i> ระบบทำงานสมบูรณ์";
-                kpiStatusSub.className = "text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium";
-            }
         }
 
         function resetSimulation() {
             document.getElementById('sim-press').value = 6.12;
             document.getElementById('sim-purity').value = 99.2;
-            document.getElementById('sim-moist').value = 18;
+            document.getElementById('sim-leak').value = 1.5;
             updateSimulation();
         }
 
@@ -751,18 +785,21 @@
             const press = parseFloat(document.getElementById('new-gis-press').value).toFixed(2);
             const temp = parseFloat(document.getElementById('new-gis-temp').value).toFixed(1);
 
-            let statusHtml = '';
-            let actionHtml = '-';
+            // Add node to dropdown selector for chart
+            const select = document.getElementById('chart-node-select');
+            const option = document.createElement('option');
+            option.value = name;
+            option.innerText = name;
+            select.appendChild(option);
 
-            if (press < 5.6) {
-                statusHtml = `<span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[10px] font-bold">${translations[currentLang].st_critical}</span>`;
-                actionHtml = `<button onclick="issueJobOrder('${name}')" class="px-2 py-1 bg-rose-600 text-white rounded text-[10px] font-semibold">${translations[currentLang].btn_job}</button>`;
-            } else if (press < 5.9) {
-                statusHtml = `<span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold">${translations[currentLang].st_warning}</span>`;
-                actionHtml = `<button onclick="issueJobOrder('${name}')" class="px-2 py-1 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded text-[10px] font-semibold">${translations[currentLang].btn_job}</button>`;
-            } else {
-                statusHtml = `<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium">${translations[currentLang].st_normal}</span>`;
-            }
+            // Add mock chart data for new node
+            nodeChartData[name] = {
+                actual: [parseFloat(press)+0.1, parseFloat(press)+0.08, parseFloat(press)+0.05, parseFloat(press)+0.03, parseFloat(press)+0.01, parseFloat(press), null],
+                predict: [null, null, null, null, null, parseFloat(press), +(parseFloat(press)-0.05).toFixed(2)]
+            };
+
+            let statusHtml = `<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium">${translations[currentLang].st_normal}</span>`;
+            let actionHtml = `<button onclick="viewNodeChart('${name}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded text-[10px] font-semibold"><i class="fa-solid fa-chart-line mr-1"></i>ดูพยากรณ์</button>`;
 
             const tr = document.createElement('tr');
             tr.className = "border-t border-slate-100 dark:border-slate-800";
@@ -781,7 +818,6 @@
             document.getElementById('new-gis-temp').value = '';
         }
 
-        // Table Filter
         function filterTable() {
             const input = document.getElementById('search-input').value.toLowerCase();
             document.querySelectorAll('#table-body tr').forEach(row => {
