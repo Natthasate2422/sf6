@@ -32,357 +32,382 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Sarabun', sans-serif; transition: background-color 0.3s; }
+
+        /* Mobile 9:16 Simulation Container */
+        .mobile-9-16-wrapper {
+            max-width: 414px !important;
+            height: 736px !important;
+            margin: 20px auto !important;
+            border: 12px solid #1e293b;
+            border-radius: 36px;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+            position: relative;
+        }
+
+        /* Custom Scrollbar for Mobile View */
+        .mobile-9-16-wrapper::-webkit-scrollbar {
+            width: 4px;
+        }
+        .mobile-9-16-wrapper::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col pb-16 md:pb-0">
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-all duration-300">
 
-    <!-- Header / Navbar -->
-    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
-                <div class="bg-egat-blue text-amber-400 p-2 rounded-xl shadow">
-                    <i class="fa-solid fa-bolt text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="text-sm sm:text-base font-bold text-egat-blue dark:text-amber-400 leading-tight" data-i18n="app_title">SMART SF6 SYSTEM</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 hidden sm:block" data-i18n="app_subtitle">ระบบตรวจวัดและฟื้นฟูสภาพก๊าซ SF6 อัจฉริยะ (กฟผ.)</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400">
-                    <span class="w-1.5 h-1.5 mr-1 bg-emerald-500 rounded-full animate-pulse"></span>
-                    Online
-                </span>
+    <!-- Device Frame Wrapper (สลับระหว่าง Full Site และ 9:16 Mobile Simulator) -->
+    <div id="device-container" class="w-full flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 transition-all duration-300">
 
-                <button onclick="toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
-                    <span id="lang-btn-text">EN</span>
-                </button>
-
-                <button onclick="toggleTheme()" class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
-                    <i id="theme-icon" class="fa-solid fa-moon text-amber-500"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Interactive Simulation Bar (แถบจำลองการปรับค่า) -->
-    <section class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white px-4 py-3 shadow-md">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-sliders"></i> แผงควบคุมการจำลองค่า (Interactive Simulator)
-                </span>
-                <button onclick="resetSimulation()" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded text-slate-200 transition">
-                    <i class="fa-solid fa-rotate-left mr-1"></i>รีเซ็ตค่า
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <!-- Slider 1: Pressure -->
-                <div>
-                    <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300">ความดัน SF6 (Bar):</span>
-                        <span id="sim-press-val" class="font-bold text-amber-300">6.12 Bar</span>
+        <!-- Header / Navbar -->
+        <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 sticky top-0 z-40 shadow-sm">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-egat-blue text-amber-400 p-2 rounded-xl shadow">
+                        <i class="fa-solid fa-bolt text-sm sm:text-lg"></i>
                     </div>
-                    <input type="range" id="sim-press" min="5.0" max="6.5" step="0.05" value="6.12" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">
-                </div>
-
-                <!-- Slider 2: Purity -->
-                <div>
-                    <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300">ความบริสุทธิ์ (Purity %):</span>
-                        <span id="sim-purity-val" class="font-bold text-emerald-300">99.2 %</span>
-                    </div>
-                    <input type="range" id="sim-purity" min="95.0" max="100.0" step="0.1" value="99.2" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">
-                </div>
-
-                <!-- Slider 3: Moisture -->
-                <div>
-                    <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300">ความชื้น (Moisture ppmv):</span>
-                        <span id="sim-moist-val" class="font-bold text-sky-300">18 ppmv</span>
-                    </div>
-                    <input type="range" id="sim-moist" min="5" max="40" step="1" value="18" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content Area -->
-    <main id="dashboard-content" class="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-5">
-
-        <!-- Top Actions / Export Bar -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-sm gap-3">
-            <div>
-                <h2 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200" data-i18n="export_header">ศูนย์ส่งออกข้อมูลและสรุปรายงาน</h2>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400" data-i18n="export_desc">ดาวน์โหลดข้อมูลสถานะอุปกรณ์และการกู้คืนก๊าซ</p>
-            </div>
-            
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <button onclick="exportToExcel()" class="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-excel"></i> Excel
-                </button>
-                <button onclick="exportToPDF()" class="flex-1 sm:flex-initial px-3 py-1.5 bg-egat-blue hover:bg-blue-900 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-pdf"></i> PDF Summary
-                </button>
-            </div>
-        </div>
-
-        <!-- Key Indicators Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            
-            <!-- Metric 1: System Status -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_status_label">สถานะรวม GIS</p>
-                        <h3 id="kpi-status-text" class="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">ปกติ (Normal)</h3>
-                    </div>
-                    <div id="kpi-status-icon" class="p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-lg">
-                        <i class="fa-solid fa-shield-halved text-sm sm:text-base"></i>
+                        <h1 class="text-xs sm:text-base font-bold text-egat-blue dark:text-amber-400 leading-tight" data-i18n="app_title">SMART SF6 SYSTEM</h1>
+                        <p class="text-[9px] sm:text-xs text-slate-500 dark:text-slate-400 hidden sm:block" data-i18n="app_subtitle">ระบบตรวจวัดและฟื้นฟูสภาพก๊าซ SF6 อัจฉริยะ (กฟผ.)</p>
                     </div>
                 </div>
-                <p id="kpi-status-sub" class="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium">
-                    <i class="fa-solid fa-circle-check mr-1"></i> ระบบทำงานสมบูรณ์
-                </p>
-            </div>
+                
+                <div class="flex items-center space-x-1.5 sm:space-x-2">
+                    <!-- Switch View Button (ปุ่มสลับ Desktop <-> Mobile 9:16) -->
+                    <button onclick="toggleDeviceView()" class="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2.5 py-1 rounded-lg text-xs font-bold border border-indigo-200 dark:border-indigo-800 flex items-center gap-1.5 transition shadow-sm">
+                        <i id="view-icon" class="fa-solid fa-mobile-screen-button"></i>
+                        <span id="view-text">โหมดมือถือ (9:16)</span>
+                    </button>
 
-            <!-- Metric 2: SF6 Recovered -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
+                    <button onclick="toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
+                        <span id="lang-btn-text">EN</span>
+                    </button>
+
+                    <button onclick="toggleTheme()" class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
+                        <i id="theme-icon" class="fa-solid fa-moon text-amber-500"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Interactive Simulation Bar (แถบจำลองการปรับค่า) -->
+        <section class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white px-4 py-3 shadow-md">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] sm:text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders"></i> แผงควบคุมการจำลองค่า (Interactive Simulator)
+                    </span>
+                    <button onclick="resetSimulation()" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded text-slate-200 transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>รีเซ็ตค่า
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <!-- Slider 1: Pressure -->
                     <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_sf6_label">กู้คืน SF6</p>
-                        <h3 class="text-base sm:text-lg font-bold text-egat-blue dark:text-sky-400 mt-0.5">20.0 <span class="text-[10px] font-normal text-slate-500">kg/ปี</span></h3>
+                        <div class="flex justify-between text-[10px] sm:text-[11px] mb-1">
+                            <span class="text-slate-300">ความดัน SF6 (Bar):</span>
+                            <span id="sim-press-val" class="font-bold text-amber-300">6.12 Bar</span>
+                        </div>
+                        <input type="range" id="sim-press" min="5.0" max="6.5" step="0.05" value="6.12" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">
                     </div>
-                    <div class="p-2 bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 rounded-lg">
-                        <i class="fa-solid fa-recycle text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2" data-i18n="kpi_sf6_sub">
-                    ลดสูญเสีย > 80%
-                </p>
-            </div>
 
-            <!-- Metric 3: Carbon Offset -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
+                    <!-- Slider 2: Purity -->
                     <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_esg_label">ลดก๊าซเรือนกระจก</p>
-                        <h3 class="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">470 <span class="text-[10px] font-normal text-slate-500">tCO₂e</span></h3>
+                        <div class="flex justify-between text-[10px] sm:text-[11px] mb-1">
+                            <span class="text-slate-300">ความบริสุทธิ์ (Purity %):</span>
+                            <span id="sim-purity-val" class="font-bold text-emerald-300">99.2 %</span>
+                        </div>
+                        <input type="range" id="sim-purity" min="95.0" max="100.0" step="0.1" value="99.2" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">
                     </div>
-                    <div class="p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-lg">
-                        <i class="fa-solid fa-leaf text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium" data-i18n="kpi_esg_sub">
-                    GWP = 23,500 เท่า
-                </p>
-            </div>
 
-            <!-- Metric 4: Cost Savings -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
+                    <!-- Slider 3: Moisture -->
                     <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_roi_label">ประหยัดรวม (ROI)</p>
-                        <h3 class="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">฿87,000 <span class="text-[10px] font-normal text-slate-500" data-i18n="per_year">/ปี</span></h3>
+                        <div class="flex justify-between text-[10px] sm:text-[11px] mb-1">
+                            <span class="text-slate-300">ความชื้น (Moisture ppmv):</span>
+                            <span id="sim-moist-val" class="font-bold text-sky-300">18 ppmv</span>
+                        </div>
+                        <input type="range" id="sim-moist" min="5" max="40" step="1" value="18" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400">
                     </div>
-                    <div class="p-2 bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 rounded-lg">
-                        <i class="fa-solid fa-piggy-bank text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2" data-i18n="kpi_roi_sub">
-                    คืนทุน ~20 เดือน
-                </p>
-            </div>
-
-        </div>
-
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            
-            <!-- Real-time Chart -->
-            <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-egat-blue dark:text-amber-400"></i>
-                        <span data-i18n="chart_title">พยากรณ์ความดันก๊าซ SF6 (AI Predictive)</span>
-                    </h2>
-                    <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px]">
-                        <button onclick="updateChartRange('7D')" id="btn-7d" class="px-2 py-0.5 rounded font-semibold bg-white dark:bg-slate-700 text-egat-blue dark:text-amber-400 shadow-sm">7D</button>
-                        <button onclick="updateChartRange('30D')" id="btn-30d" class="px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">30D</button>
-                    </div>
-                </div>
-                <div class="h-56 sm:h-64 w-full">
-                    <canvas id="pressureChart"></canvas>
                 </div>
             </div>
+        </section>
 
-            <!-- Gas Quality Meter -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+        <!-- Main Content Area -->
+        <main id="dashboard-content" class="flex-1 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4 pb-12">
+
+            <!-- Top Actions / Export Bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-sm gap-2">
                 <div>
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5 mb-1">
-                        <i class="fa-solid fa-filter text-sky-600 dark:text-sky-400"></i>
-                        <span data-i18n="quality_title">ผลการตรวจวัดคุณภาพก๊าซ</span>
-                    </h2>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3" data-i18n="quality_subtitle">ตามมาตรฐาน IEC 60376</p>
-                    
-                    <div class="space-y-3">
-                        <!-- Purity -->
+                    <h2 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200" data-i18n="export_header">ศูนย์ส่งออกข้อมูลและสรุปรายงาน</h2>
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400" data-i18n="export_desc">ดาวน์โหลดข้อมูลสถานะอุปกรณ์และการกู้คืนก๊าซ</p>
+                </div>
+                
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="exportToExcel()" class="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                    <button onclick="exportToPDF()" class="flex-1 sm:flex-initial px-3 py-1.5 bg-egat-blue hover:bg-blue-900 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Indicators Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                
+                <!-- Metric 1: System Status -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-600 dark:text-slate-300" data-i18n="purity_label">ความบริสุทธิ์</span>
-                                <span id="val-purity" class="text-emerald-600 dark:text-emerald-400 font-bold">99.2% (≥99%)</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="bar-purity" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 99.2%"></div>
-                            </div>
+                            <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_status_label">สถานะรวม GIS</p>
+                            <h3 id="kpi-status-text" class="text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">ปกติ</h3>
                         </div>
+                        <div id="kpi-status-icon" class="p-1.5 sm:p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-lg">
+                            <i class="fa-solid fa-shield-halved text-xs sm:text-base"></i>
+                        </div>
+                    </div>
+                    <p id="kpi-status-sub" class="text-[9px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                        <i class="fa-solid fa-circle-check mr-1"></i> สมบูรณ์
+                    </p>
+                </div>
 
-                        <!-- Moisture -->
+                <!-- Metric 2: SF6 Recovered -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-600 dark:text-slate-300" data-i18n="moisture_label">ความชื้น</span>
-                                <span id="val-moisture" class="text-sky-600 dark:text-sky-400 font-bold">18 ppmv (≤25)</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="bar-moisture" class="bg-sky-500 h-full rounded-full transition-all duration-300" style="width: 72%"></div>
-                            </div>
+                            <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_sf6_label">กู้คืน SF6</p>
+                            <h3 class="text-sm sm:text-lg font-bold text-egat-blue dark:text-sky-400 mt-0.5">20.0 <span class="text-[9px] font-normal text-slate-500">kg/ปี</span></h3>
                         </div>
+                        <div class="p-1.5 sm:p-2 bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 rounded-lg">
+                            <i class="fa-solid fa-recycle text-xs sm:text-base"></i>
+                        </div>
+                    </div>
+                    <p class="text-[9px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="kpi_sf6_sub">
+                        ลดสูญเสีย > 80%
+                    </p>
+                </div>
 
-                        <!-- Acid Gases -->
+                <!-- Metric 3: Carbon Offset -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-600 dark:text-slate-300" data-i18n="acid_label">ก๊าซกรดพิษ</span>
-                                <span id="val-acid" class="text-indigo-600 dark:text-indigo-400 font-bold">4 ppmv (≤12)</span>
+                            <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_esg_label">ลดก๊าซเรือนกระจก</p>
+                            <h3 class="text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">470 <span class="text-[9px] font-normal text-slate-500">tCO₂e</span></h3>
+                        </div>
+                        <div class="p-1.5 sm:p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-lg">
+                            <i class="fa-solid fa-leaf text-xs sm:text-base"></i>
+                        </div>
+                    </div>
+                    <p class="text-[9px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium" data-i18n="kpi_esg_sub">
+                        GWP = 23,500x
+                    </p>
+                </div>
+
+                <!-- Metric 4: Cost Savings -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_roi_label">ประหยัดรวม (ROI)</p>
+                            <h3 class="text-sm sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">฿87,000</h3>
+                        </div>
+                        <div class="p-1.5 sm:p-2 bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 rounded-lg">
+                            <i class="fa-solid fa-piggy-bank text-xs sm:text-base"></i>
+                        </div>
+                    </div>
+                    <p class="text-[9px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="kpi_roi_sub">
+                        คืนทุน ~20 เดือน
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                
+                <!-- Real-time Chart -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+                    <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line text-egat-blue dark:text-amber-400"></i>
+                            <span data-i18n="chart_title">พยากรณ์ความดันก๊าซ SF6 (AI Predictive)</span>
+                        </h2>
+                        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px]">
+                            <button onclick="updateChartRange('7D')" id="btn-7d" class="px-2 py-0.5 rounded font-semibold bg-white dark:bg-slate-700 text-egat-blue dark:text-amber-400 shadow-sm">7D</button>
+                            <button onclick="updateChartRange('30D')" id="btn-30d" class="px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">30D</button>
+                        </div>
+                    </div>
+                    <div class="h-48 sm:h-64 w-full">
+                        <canvas id="pressureChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gas Quality Meter -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5 mb-1">
+                            <i class="fa-solid fa-filter text-sky-600 dark:text-sky-400"></i>
+                            <span data-i18n="quality_title">ผลการตรวจวัดคุณภาพก๊าซ</span>
+                        </h2>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mb-2.5" data-i18n="quality_subtitle">ตามมาตรฐาน IEC 60376</p>
+                        
+                        <div class="space-y-2.5">
+                            <!-- Purity -->
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-600 dark:text-slate-300" data-i18n="purity_label">ความบริสุทธิ์</span>
+                                    <span id="val-purity" class="text-emerald-600 dark:text-emerald-400 font-bold">99.2%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div id="bar-purity" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 99.2%"></div>
+                                </div>
                             </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="bar-acid" class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: 33%"></div>
+
+                            <!-- Moisture -->
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-600 dark:text-slate-300" data-i18n="moisture_label">ความชื้น</span>
+                                    <span id="val-moisture" class="text-sky-600 dark:text-sky-400 font-bold">18 ppmv</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div id="bar-moisture" class="bg-sky-500 h-full rounded-full transition-all duration-300" style="width: 72%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Acid Gases -->
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1">
+                                    <span class="text-slate-600 dark:text-slate-300" data-i18n="acid_label">ก๊าซกรดพิษ</span>
+                                    <span id="val-acid" class="text-indigo-600 dark:text-indigo-400 font-bold">4 ppmv</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div id="bar-acid" class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: 33%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mt-3 p-2.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <div class="text-[11px]">
-                        <span class="text-slate-500 dark:text-slate-400 block" data-i18n="treatment_label">สถานะการบำบัด:</span>
-                        <span id="treatment-status" class="text-emerald-600 dark:text-emerald-400 font-bold" data-i18n="treatment_val">ผ่านเกณฑ์ เติมกลับได้</span>
-                    </div>
-                    <i id="treatment-icon" class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Table & Asset Tracking -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            
-            <!-- Table Section -->
-            <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-server text-egat-blue dark:text-amber-400"></i>
-                        <span data-i18n="table_title">สถานะตู้ก๊าซ GIS Substation</span>
-                    </h2>
-                    <input type="text" id="search-input" onkeyup="filterTable()" placeholder="ค้นหา..." class="w-full sm:w-40 pl-3 pr-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table id="gis-data-table" class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase border-b border-slate-200 dark:border-slate-800">
-                            <tr>
-                                <th class="p-2.5" data-i18n="th_device">ตู้ GIS</th>
-                                <th class="p-2.5" data-i18n="th_pressure">ความดัน</th>
-                                <th class="p-2.5" data-i18n="th_temp">อุณหภูมิ</th>
-                                <th class="p-2.5" data-i18n="th_status">สถานะ AI</th>
-                                <th class="p-2.5" data-i18n="th_action">การทำงาน</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <tr>
-                                <td class="p-2.5 font-semibold">Bay 01 - CB-01</td>
-                                <td id="tbl-press-1" class="p-2.5 text-emerald-600 dark:text-emerald-400 font-bold font-mono">6.20 Bar</td>
-                                <td class="p-2.5">34.5 °C</td>
-                                <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium" data-i18n="st_normal">ปกติ</span></td>
-                                <td class="p-2.5 text-slate-400">-</td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 font-semibold">Bay 02 - DS-02</td>
-                                <td id="tbl-press-2" class="p-2.5 text-amber-600 dark:text-amber-400 font-bold font-mono">5.85 Bar</td>
-                                <td class="p-2.5">36.1 °C</td>
-                                <td class="p-2.5"><span id="tbl-status-2" class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold" data-i18n="st_warning">เฝ้าระวัง</span></td>
-                                <td class="p-2.5">
-                                    <button onclick="issueJobOrder('Bay 02 - DS-02')" class="px-2 py-1 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded text-[10px] font-semibold" data-i18n="btn_job">
-                                        ออก Job
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Asset Tracking Section -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                <div>
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5 mb-2">
-                        <i class="fa-solid fa-qrcode text-egat-blue dark:text-amber-400"></i>
-                        <span data-i18n="tracking_title">Circular Tracking (ถังก๊าซ)</span>
-                    </h2>
-                    
-                    <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-                        <div class="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
-                            <span class="text-slate-500" data-i18n="lbl_cyl_id">รหัสถัง:</span>
-                            <span id="cyl-id" class="font-mono text-egat-blue dark:text-amber-400 font-bold">SF6-CYL-2026-089</span>
+                    <div class="mt-3 p-2 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <div class="text-[10px]">
+                            <span class="text-slate-500 dark:text-slate-400 block" data-i18n="treatment_label">สถานะการบำบัด:</span>
+                            <span id="treatment-status" class="text-emerald-600 dark:text-emerald-400 font-bold" data-i18n="treatment_val">ผ่านเกณฑ์ เติมกลับได้</span>
                         </div>
-                        <div class="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
-                            <span class="text-slate-500" data-i18n="lbl_cyl_proc">สถานะถัง:</span>
-                            <span id="cyl-status" class="text-emerald-600 dark:text-emerald-400 font-bold">พร้อมใช้งาน</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500" data-i18n="lbl_cyl_vol">ปริมาณก๊าซ:</span>
-                            <span class="font-semibold">40.0 kg</span>
-                        </div>
+                        <i id="treatment-icon" class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
                     </div>
                 </div>
 
-                <button onclick="simulateScanQR()" class="w-full mt-3 py-2 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow">
-                    <i class="fa-solid fa-barcode"></i> <span data-i18n="btn_scan">สแกน QR Code ถังใหม่</span>
-                </button>
             </div>
 
-        </div>
+            <!-- Table & Asset Tracking -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                
+                <!-- Table Section -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-server text-egat-blue dark:text-amber-400"></i>
+                            <span data-i18n="table_title">สถานะตู้ก๊าซ GIS Substation</span>
+                        </h2>
+                        <input type="text" id="search-input" onkeyup="filterTable()" placeholder="ค้นหา..." class="w-full sm:w-36 pl-2.5 pr-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
+                    </div>
 
-    </main>
+                    <div class="overflow-x-auto">
+                        <table id="gis-data-table" class="w-full text-left text-[11px]">
+                            <thead class="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th class="p-2" data-i18n="th_device">ตู้ GIS</th>
+                                    <th class="p-2" data-i18n="th_pressure">ความดัน</th>
+                                    <th class="p-2" data-i18n="th_status">สถานะ</th>
+                                    <th class="p-2" data-i18n="th_action">สั่งการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr>
+                                    <td class="p-2 font-semibold">Bay 01 CB</td>
+                                    <td id="tbl-press-1" class="p-2 text-emerald-600 dark:text-emerald-400 font-bold font-mono">6.20 Bar</td>
+                                    <td class="p-2"><span class="px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 text-[9px] font-medium" data-i18n="st_normal">ปกติ</span></td>
+                                    <td class="p-2 text-slate-400">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 font-semibold">Bay 02 DS</td>
+                                    <td id="tbl-press-2" class="p-2 text-amber-600 dark:text-amber-400 font-bold font-mono">5.85 Bar</td>
+                                    <td class="p-2"><span id="tbl-status-2" class="px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400 text-[9px] font-semibold" data-i18n="st_warning">เฝ้าระวัง</span></td>
+                                    <td class="p-2">
+                                        <button onclick="issueJobOrder('Bay 02 - DS')" class="px-2 py-0.5 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded text-[9px] font-semibold" data-i18n="btn_job">
+                                            ออก Job
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-    <!-- Mobile Navigation Bar (เมนูด้านล่างสำหรับมือถือ) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-2 px-3 z-50 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-0.5 text-egat-blue dark:text-amber-400">
-            <i class="fa-solid fa-gauge text-base"></i>
-            <span>หน้าหลัก</span>
-        </button>
-        <button onclick="document.getElementById('pressureChart').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-0.5">
-            <i class="fa-solid fa-chart-line text-base"></i>
-            <span>พยากรณ์</span>
-        </button>
-        <button onclick="document.getElementById('gis-data-table').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-0.5">
-            <i class="fa-solid fa-server text-base"></i>
-            <span>ตู้ GIS</span>
-        </button>
-        <button onclick="exportToPDF()" class="flex flex-col items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
-            <i class="fa-solid fa-file-pdf text-base"></i>
-            <span>Export</span>
-        </button>
-    </nav>
+                <!-- Asset Tracking Section -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5 mb-2">
+                            <i class="fa-solid fa-qrcode text-egat-blue dark:text-amber-400"></i>
+                            <span data-i18n="tracking_title">Circular Tracking (ถังก๊าซ)</span>
+                        </h2>
+                        
+                        <div class="bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1.5 text-[11px]">
+                            <div class="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                                <span class="text-slate-500" data-i18n="lbl_cyl_id">รหัสถัง:</span>
+                                <span id="cyl-id" class="font-mono text-egat-blue dark:text-amber-400 font-bold">SF6-CYL-2026-089</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-1">
+                                <span class="text-slate-500" data-i18n="lbl_cyl_proc">สถานะถัง:</span>
+                                <span id="cyl-status" class="text-emerald-600 dark:text-emerald-400 font-bold">พร้อมใช้งาน</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500" data-i18n="lbl_cyl_vol">ปริมาณก๊าซ:</span>
+                                <span class="font-semibold">40.0 kg</span>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-3 px-4 text-center text-[11px] text-slate-500 hidden md:block">
-        <p data-i18n="footer_project">โครงการ EGAT GREEN I ปีที่ 3 "GREEN INNO FOR ESG & CIRCULAR FUTURE"</p>
-        <p class="mt-0.5 font-medium" data-i18n="footer_team">พัฒนาโดย ทีมฝั่งธนไม่หมูอะบูดาบี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี (มดธ.)</p>
-    </footer>
+                    <button onclick="simulateScanQR()" class="w-full mt-2.5 py-1.5 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow">
+                        <i class="fa-solid fa-barcode"></i> <span data-i18n="btn_scan">สแกน QR Code ถังใหม่</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-3 px-4 text-center text-[10px] text-slate-500">
+            <p data-i18n="footer_project">โครงการ EGAT GREEN I ปีที่ 3 "GREEN INNO FOR ESG & CIRCULAR FUTURE"</p>
+            <p class="mt-0.5 font-medium" data-i18n="footer_team">พัฒนาโดย ทีมฝั่งธนไม่หมูอะบูดาบี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี (มดธ.)</p>
+        </footer>
+
+    </div>
 
     <!-- JavaScript Scripting -->
     <script>
+        // Toggle Device View Mode (Desktop vs Mobile 9:16)
+        let isMobileView = false;
+        function toggleDeviceView() {
+            const container = document.getElementById('device-container');
+            const viewText = document.getElementById('view-text');
+            const viewIcon = document.getElementById('view-icon');
+
+            isMobileView = !isMobileView;
+
+            if (isMobileView) {
+                container.classList.add('mobile-9-16-wrapper');
+                viewText.innerText = "โหมด Site ปกติ";
+                viewIcon.className = "fa-solid fa-desktop";
+            } else {
+                container.classList.remove('mobile-9-16-wrapper');
+                viewText.innerText = "โหมดมือถือ (9:16)";
+                viewIcon.className = "fa-solid fa-mobile-screen-button";
+            }
+            if(chart) chart.resize();
+        }
+
         // Theme Toggle
         function toggleTheme() {
             const html = document.documentElement;
@@ -408,10 +433,9 @@
                 kpi_sf6_label: "กู้คืน SF6",
                 kpi_sf6_sub: "ลดสูญเสีย > 80%",
                 kpi_esg_label: "ลดก๊าซเรือนกระจก",
-                kpi_esg_sub: "GWP = 23,500 เท่า",
+                kpi_esg_sub: "GWP = 23,500x",
                 kpi_roi_label: "ประหยัดรวม (ROI)",
                 kpi_roi_sub: "คืนทุน ~20 เดือน",
-                per_year: "/ปี",
                 chart_title: "พยากรณ์ความดันก๊าซ SF6 (AI Predictive)",
                 quality_title: "ผลการตรวจวัดคุณภาพก๊าซ",
                 quality_subtitle: "ตามมาตรฐาน IEC 60376",
@@ -423,9 +447,8 @@
                 table_title: "สถานะตู้ก๊าซ GIS Substation",
                 th_device: "ตู้ GIS",
                 th_pressure: "ความดัน",
-                th_temp: "อุณหภูมิ",
-                th_status: "สถานะ AI",
-                th_action: "การทำงาน",
+                th_status: "สถานะ",
+                th_action: "สั่งการ",
                 st_normal: "ปกติ",
                 st_warning: "เฝ้าระวัง",
                 btn_job: "ออก Job",
@@ -449,7 +472,6 @@
                 kpi_esg_sub: "GWP = 23,500x",
                 kpi_roi_label: "Cost Savings (ROI)",
                 kpi_roi_sub: "Payback ~20 Months",
-                per_year: "/yr",
                 chart_title: "SF6 Pressure AI Predictive",
                 quality_title: "Gas Quality Analysis",
                 quality_subtitle: "IEC 60376 Standard",
@@ -461,8 +483,7 @@
                 table_title: "GIS Compartment Live Status",
                 th_device: "GIS Node",
                 th_pressure: "Pressure",
-                th_temp: "Temp",
-                th_status: "AI Status",
+                th_status: "Status",
                 th_action: "Action",
                 st_normal: "Normal",
                 st_warning: "Warning",
@@ -495,7 +516,7 @@
                 datasets: [
                     { label: 'ความดันจริง (Bar)', data: [6.25, 6.23, 6.20, 6.18, 6.15, 6.12, null], borderColor: '#003366', backgroundColor: 'rgba(0,51,102,0.08)', borderWidth: 2, fill: true, tension: 0.3 },
                     { label: 'AI Trend', data: [null, null, null, null, null, 6.12, 6.05], borderColor: '#f59e0b', borderDash: [4, 4], borderWidth: 2, tension: 0.3 },
-                    { label: 'Critical Limit', data: [5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5], borderColor: '#ef4444', borderWidth: 1, pointRadius: 0 }
+                    { label: 'Limit', data: [5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5], borderColor: '#ef4444', borderWidth: 1, pointRadius: 0 }
                 ]
             },
             options: { responsive: true, maintainAspectRatio: false }
@@ -516,63 +537,58 @@
             chart.update();
         }
 
-        // Live Simulation Logic (การจำลองปรับเปลี่ยนค่าแบบ Interactive)
+        // Live Simulation Logic
         function updateSimulation() {
             const press = parseFloat(document.getElementById('sim-press').value);
             const purity = parseFloat(document.getElementById('sim-purity').value);
             const moist = parseInt(document.getElementById('sim-moist').value);
 
-            // Update Value Labels
             document.getElementById('sim-press-val').innerText = press.toFixed(2) + ' Bar';
             document.getElementById('sim-purity-val').innerText = purity.toFixed(1) + ' %';
             document.getElementById('sim-moist-val').innerText = moist + ' ppmv';
 
-            // Update Gas Quality Meters
-            document.getElementById('val-purity').innerText = `${purity.toFixed(1)}% (≥99%)`;
+            document.getElementById('val-purity').innerText = `${purity.toFixed(1)}%`;
             document.getElementById('bar-purity').style.width = purity + '%';
 
-            document.getElementById('val-moisture').innerText = `${moist} ppmv (≤25)`;
+            document.getElementById('val-moisture').innerText = `${moist} ppmv`;
             document.getElementById('bar-moisture').style.width = (moist / 40 * 100) + '%';
 
-            // Check IEC Standard
             const treatmentStatus = document.getElementById('treatment-status');
             const treatmentIcon = document.getElementById('treatment-icon');
             if (purity >= 99.0 && moist <= 25) {
                 treatmentStatus.innerText = "ผ่านเกณฑ์ เติมกลับได้";
                 treatmentStatus.className = "text-emerald-600 dark:text-emerald-400 font-bold";
-                treatmentIcon.className = "fa-solid fa-circle-check text-emerald-500 text-lg";
+                treatmentIcon.className = "fa-solid fa-circle-check text-emerald-500 text-base";
             } else {
                 treatmentStatus.innerText = "ไม่ผ่านเกณฑ์ (ต้องบำบัดเพิ่ม)";
                 treatmentStatus.className = "text-rose-600 dark:text-rose-400 font-bold";
-                treatmentIcon.className = "fa-solid fa-circle-xmark text-rose-500 text-lg";
+                treatmentIcon.className = "fa-solid fa-circle-xmark text-rose-500 text-base";
             }
 
-            // Update Chart Data Dynamic
             chart.data.datasets[0].data[5] = press;
             chart.data.datasets[1].data[5] = press;
             chart.data.datasets[1].data[6] = +(press - 0.07).toFixed(2);
             chart.update();
 
-            // Update Table Data Dynamic
             document.getElementById('tbl-press-2').innerText = press.toFixed(2) + ' Bar';
             const kpiStatusText = document.getElementById('kpi-status-text');
             const kpiStatusSub = document.getElementById('kpi-status-sub');
             
             if (press < 5.6) {
-                kpiStatusText.innerText = "วิกฤต (Critical)";
-                kpiStatusText.className = "text-base sm:text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5";
-                kpiStatusSub.innerHTML = "<i class='fa-solid fa-triangle-exclamation mr-1'></i> พบจุดรั่วซึมวิกฤต!";
-                kpiStatusSub.className = "text-[10px] sm:text-xs text-rose-600 dark:text-rose-400 mt-2 font-bold animate-pulse";
+                kpiStatusText.innerText = "วิกฤต";
+                kpiStatusText.className = "text-sm sm:text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5";
+                kpiStatusSub.innerHTML = "<i class='fa-solid fa-triangle-exclamation mr-1'></i> รั่วซึมวิกฤต";
+                kpiStatusSub.className = "text-[9px] sm:text-xs text-rose-600 dark:text-rose-400 mt-1 font-bold animate-pulse";
             } else if (press < 5.9) {
-                kpiStatusText.innerText = "เฝ้าระวัง (Warning)";
-                kpiStatusText.className = "text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5";
-                kpiStatusSub.innerHTML = "<i class='fa-solid fa-bell mr-1'></i> ตรวจพบแรงดันตก";
-                kpiStatusSub.className = "text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-2 font-semibold";
+                kpiStatusText.innerText = "เฝ้าระวัง";
+                kpiStatusText.className = "text-sm sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5";
+                kpiStatusSub.innerHTML = "<i class='fa-solid fa-bell mr-1'></i> แรงดันตก";
+                kpiStatusSub.className = "text-[9px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1 font-semibold";
             } else {
-                kpiStatusText.innerText = "ปกติ (Normal)";
-                kpiStatusText.className = "text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5";
-                kpiStatusSub.innerHTML = "<i class='fa-solid fa-circle-check mr-1'></i> ระบบทำงานสมบูรณ์";
-                kpiStatusSub.className = "text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium";
+                kpiStatusText.innerText = "ปกติ";
+                kpiStatusText.className = "text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5";
+                kpiStatusSub.innerHTML = "<i class='fa-solid fa-circle-check mr-1'></i> สมบูรณ์";
+                kpiStatusSub.className = "text-[9px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium";
             }
         }
 
@@ -583,7 +599,6 @@
             updateSimulation();
         }
 
-        // Functions
         function filterTable() {
             const input = document.getElementById('search-input').value.toLowerCase();
             document.querySelectorAll('#table-body tr').forEach(row => {
