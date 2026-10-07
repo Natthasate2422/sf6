@@ -59,6 +59,11 @@ input[type=number],input[type=text]{width:100%;padding:.3em .5em;border:1px soli
 table{width:100%;border-collapse:collapse}td{padding:.35em .2em;border-bottom:1px solid var(--line)}td:last-child{text-align:right}
 .note{font-size:.85em;color:var(--mute);margin:.5em 0 0}
 .f{font-family:ui-monospace,Menlo,monospace;background:var(--bg);padding:.5em .7em;border-radius:6px;margin:.4em 0;overflow-x:auto}
+.cap{font-size:.85em;color:var(--mute);min-height:1.35em;padding:0 .2em}
+.mbg{position:fixed;inset:0;background:rgba(5,11,18,.62);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px;font-size:15px}.mbg[hidden]{display:none}
+.modal{width:min(540px,100%);max-height:100%;overflow:auto;border-top:6px solid var(--warn)}.modal.crit{border-top-color:var(--crit)}
+.modal .cvw{height:210px;margin:.4em 0}.modal h2{display:flex;gap:.6em;align-items:center;flex-wrap:wrap;margin:0}
+button[aria-pressed=false].tg{opacity:.6}
 .sm{display:none}#bays{position:relative}.home,.appbar{display:none}
 .home .bay{width:100%}.tile{display:flex;flex-direction:column;align-items:flex-start;gap:.4em;padding:16px;min-height:150px;text-align:left;border-radius:16px;background:var(--card);color:var(--ink)}
 .tile svg{color:var(--acc);margin-bottom:auto}.tile b{font-size:1.15em}.tile span{font-size:.85em;color:var(--mute)}.tile.al{border-color:var(--crit)}.tile.wa{border-color:var(--warn)}
@@ -102,7 +107,7 @@ input[type=range]{height:30px}
 <div class="page"><div class="stage"><div class="in">
 <div class="top">
   <h1>Smart SF₆ Leakage &amp; Regeneration<small>Prototype · ข้อมูลจำลอง</small></h1>
-  <div class="chips"><span class="chip s-ok" id="cOk"></span><span class="chip s-warn" id="cWarn"></span><span class="chip s-crit" id="cCrit"></span><button id="theme" aria-label="สลับโหมดสว่าง/มืด">◐</button></div>
+  <div class="chips"><span class="chip s-ok" id="cOk"></span><span class="chip s-warn" id="cWarn"></span><span class="chip s-crit" id="cCrit"></span><button id="alT" class="tg" aria-pressed="true">แจ้งเตือน: เปิด</button><button id="theme" aria-label="สลับโหมดสว่าง/มืด">◐</button></div>
 </div>
 <div class="appbar" id="appbar"><button id="back" aria-label="กลับหน้าหลัก">‹</button><b id="abT" style="flex:1;font-size:1.15em"></b><button id="theme2" aria-label="สลับโหมดสว่าง/มืด">◐</button></div>
 <div class="home" id="home">
@@ -198,16 +203,19 @@ input[type=range]{height:30px}
 </div>
 </div></div></div>
 
+<div id="alertBg" class="mbg" hidden><div id="modal" class="modal card" role="alertdialog" aria-modal="true" aria-labelledby="mT">
+  <h2 id="mT"></h2><div class="cvw"><canvas id="mCv"></canvas></div><table id="mTbl"></table><p class="note" id="mWho"></p>
+  <div class="row"><button id="mNext">ถัดไป</button><button class="p" id="mGo">ดูรายละเอียด</button><button id="mX">ปิด</button></div></div></div>
 <script>
 (function(){
 var CRIT=4.7,WARN=5.4,FULL=6.0,GWP=23500,N=30,$=function(i){return document.getElementById(i)};
 var bays=[[5.92,.001,31],[5.85,.002,32],[5.25,.018,33],[4.62,.03,34],[5.95,0,31],[5.5,.012,32],[5.7,.004,33],[5.88,.002,30]].map(function(a,i){return{id:i+1,n:'Bay '+('0'+(i+1)).slice(-2),P:a[0],L:a[1],T:a[2]}});
-var sel=2,count=matchMedia('(max-width:820px)').matches?2:4,nextId=9,pick=['p20','p20','p20','p20','ptp','gas'],pickBay=[3,4,1,2,'sel','sel'];
+var sel=2,count=matchMedia('(max-width:820px)').matches?2:4,nextId=9,pick=['p20','p20','p20','p20','ptp','gas'],pickBay=['auto','auto','auto','auto','auto','auto'],alertsOn=true;
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 function short(b){return b.n.replace(/^Bay\s*/i,'').slice(0,6)||b.n}
 function bayOf(v){if(v!=='sel')for(var i=0;i<bays.length;i++)if(bays[i].id===+v)return bays[i];return bays[sel]}
-function save(){try{localStorage.setItem('sf6dash',JSON.stringify({bays:bays.map(function(b){return{id:b.id,n:b.n,P:b.P,L:b.L,T:b.T}}),sel:sel,count:count,nextId:nextId,pick:pick,pickBay:pickBay}))}catch(e){}}
-(function(){try{var o=JSON.parse(localStorage.getItem('sf6dash')||'null');if(o&&o.bays&&o.bays.length){bays=o.bays;sel=Math.min(o.sel||0,bays.length-1);count=o.count||4;nextId=o.nextId||bays.length+1;pick=o.pick||pick;pickBay=o.pickBay||pickBay}}catch(e){}})();
+function save(){try{localStorage.setItem('sf6dash',JSON.stringify({bays:bays.map(function(b){return{id:b.id,n:b.n,P:b.P,L:b.L,T:b.T}}),sel:sel,count:count,nextId:nextId,pick:pick,pickBay:pickBay,v:2,al:alertsOn}))}catch(e){}}
+(function(){try{var o=JSON.parse(localStorage.getItem('sf6dash')||'null');if(o&&o.bays&&o.bays.length){bays=o.bays;sel=Math.min(o.sel||0,bays.length-1);count=o.count||4;nextId=o.nextId||bays.length+1;pick=o.pick||pick;pickBay=(o.v>=2&&o.pickBay)||pickBay;alertsOn=o.al!==false}}catch(e){}})();
 var SN={ok:'Normal',warn:'เฝ้าระวัง',crit:'วิกฤติ'};
 function C(k){return k.charAt(0)=='#'?k:getComputedStyle(document.documentElement).getPropertyValue('--'+k).trim()}
 function toP20(p,t){return p*293.15/(273.15+t)}function toPT(p,t){return p*(273.15+t)/293.15}
@@ -255,14 +263,19 @@ var defs={
 };
 function buildSlots(){var g=$('grid');g.className='grid n'+count;g.innerHTML='';
   for(var i=0;i<count;i++){(function(i){var s=document.createElement('div');s.className='card slot';
-    var bo='<option value="sel">ตาม Bay ที่เลือก</option>'+bays.map(function(b){return'<option value="'+b.id+'"'+(String(pickBay[i])===String(b.id)?' selected':'')+'>'+esc(b.n)+'</option>'}).join('');
+    var bo='<option value="auto"'+(pickBay[i]==='auto'?' selected':'')+'>อัตโนมัติ: Bay ที่มีปัญหาก่อน</option><option value="sel"'+(pickBay[i]==='sel'?' selected':'')+'>ตาม Bay ที่เลือก</option>'+bays.map(function(b){return'<option value="'+b.id+'"'+(String(pickBay[i])===String(b.id)?' selected':'')+'>'+esc(b.n)+'</option>'}).join('');
     var co=Object.keys(defs).map(function(k){return'<option value="'+k+'"'+(pick[i]===k?' selected':'')+'>'+defs[k][0]+'</option>'}).join('');
-    s.innerHTML='<div class="sel2"><select class="sb" aria-label="เลือก Bay ช่องที่ '+(i+1)+'">'+bo+'</select><select class="sc" aria-label="เลือกกราฟช่องที่ '+(i+1)+'">'+co+'</select></div><div class="cvw"><canvas></canvas></div>';
+    s.innerHTML='<div class="sel2"><select class="sb" aria-label="เลือก Bay ช่องที่ '+(i+1)+'">'+bo+'</select><select class="sc" aria-label="เลือกกราฟช่องที่ '+(i+1)+'">'+co+'</select></div><div class="cap"></div><div class="cvw"><canvas></canvas></div>';
     var sb=s.querySelector('.sb'),sc=s.querySelector('.sc');sb.style.display=defs[pick[i]][2]?'none':'';
     sb.onchange=function(){pickBay[i]=this.value;save();paint()};
     sc.onchange=function(){pick[i]=this.value;sb.style.display=defs[this.value][2]?'none':'';save();paint()};g.appendChild(s)})(i)}
   document.querySelectorAll('#cnt button').forEach(function(b){b.setAttribute('aria-pressed',+b.dataset.n===count)});paint()}
-function paint(){bays.forEach(derive);document.querySelectorAll('#grid .slot').forEach(function(s,i){draw(s.querySelector('canvas'),defs[pick[i]][1](bayOf(pickBay[i])))})}
+var rk={ok:0,warn:1,crit:2};
+function rankBays(){return bays.slice().sort(function(a,b){var d=rk[b.s]-rk[a.s];if(d)return d;var x=a.days===null?1e9:a.days,y=b.days===null?1e9:b.days;return x-y})}
+function resolve(i){var v=pickBay[i];if(v!=='auto')return bayOf(v);var j=0;for(var k=0;k<i;k++)if(pickBay[k]==='auto'&&!defs[pick[k]][2])j++;var r=rankBays();return r[j%r.length]}
+function paint(){bays.forEach(derive);document.querySelectorAll('#grid .slot').forEach(function(s,i){var b=resolve(i),cmp=defs[pick[i]][2];
+  s.querySelector('.cap').innerHTML=cmp?'':'<i class="dot d-'+b.s+'" style="width:.8em;height:.8em;display:inline-block;vertical-align:-1px"></i> '+esc(b.n)+' · '+SN[b.s];
+  draw(s.querySelector('canvas'),defs[pick[i]][1](b))})}
 new ResizeObserver(function(){paint()}).observe($('grid'));
 document.querySelectorAll('#cnt button').forEach(function(b){b.onclick=function(){count=+b.dataset.n;save();buildSlots()}});
 
@@ -282,7 +295,7 @@ function update(){bays.forEach(derive);var b=bays[sel],last=b.h[N-1],cn={ok:0,wa
   $('iP').value=b.P;$('iL').value=b.L;$('iT').value=b.T;$('oP').textContent=b.P.toFixed(2);$('oL').textContent=b.L.toFixed(3);$('oT').textContent=b.T.toFixed(1);$('rbay').textContent=b.n;
   var w=$('wo');if(b.s==='ok'){w.hidden=true}else{var kg=Math.max(0,mfull()*(FULL-b.P)/FULL);w.hidden=false;w.className='card wo'+(b.s==='crit'?' crit':'');
     w.innerHTML='<h2>'+(b.s==='crit'?'แจ้งเตือนทันที: ใบสั่งงานฉุกเฉิน':'ใบสั่งงานดิจิทัล')+'</h2><table><tr><td>สถานที่</td><td>230kV GIS, '+esc(b.n)+'</td></tr><tr><td>P₂₀</td><td>'+b.P.toFixed(2)+' bar</td></tr><tr><td>เตรียมก๊าซเติมถึง 6.0 bar</td><td><b>'+kg.toFixed(1)+' kg</b></td></tr></table><p class="note">'+(b.s==='crit'?'เข้าหน้างานก่อนระบบป้องกันสั่ง Lockout / ทริป':'วางแผนเติมก๊าซและเข้าบำรุงรักษาประจำเดือน')+'</p>'}
-  paint()}
+  paint();clearTimeout(at);at=setTimeout(checkAlerts,600)}
 function bind(id,k){$(id).oninput=function(){bays[sel][k]=+this.value;update()}}bind('iP','P');bind('iL','L');bind('iT','T');
 document.querySelectorAll('[data-sc]').forEach(function(x){x.onclick=function(){var s={ok:[5.9,.002],warn:[5.25,.018],crit:[4.6,.03]}[x.dataset.sc];bays[sel].P=s[0];bays[sel].L=s[1];update()}});
 $('mfull').oninput=update;
@@ -307,6 +320,27 @@ $('aOk').onclick=function(){var n=$('aN').value.trim()||'Bay '+('0'+nextId).slic
   sel=bays.length-1;$('addForm').hidden=true;buildSlots();update();var sd=document.querySelector('.side');sd.scrollTop=sd.scrollHeight};
 $('delBtn').onclick=function(){if(bays.length<=1)return;if(!confirm('ลบ '+bays[sel].n+' ?'))return;bays.splice(sel,1);sel=Math.min(sel,bays.length-1);buildSlots();update()};
 $('rst').onclick=function(e){e.preventDefault();try{localStorage.removeItem('sf6dash')}catch(x){}location.reload()};
+
+// alert popup
+var at=null,lastAlert={},queue=[],qi=0;
+function checkAlerts(){var nw=[];bays.forEach(function(b){var p=lastAlert[b.id]||'ok';if(rk[b.s]>rk[p])nw.push(b);lastAlert[b.id]=b.s});
+  if(!nw.length||!alertsOn)return;nw.sort(function(a,b){return rk[b.s]-rk[a.s]});
+  if($('alertBg').hidden){queue=nw;qi=0}else nw.forEach(function(b){if(queue.indexOf(b)<0)queue.push(b)});openAlert()}
+function openAlert(){queue=queue.filter(function(b){return bays.indexOf(b)>=0});if(!queue.length){closeAlert();return}
+  if(qi>=queue.length)qi=0;var b=queue[qi],kg=Math.max(0,mfull()*(FULL-b.P)/FULL);
+  $('modal').className='modal card'+(b.s==='crit'?' crit':'');
+  $('mT').innerHTML='<i class="dot d-'+b.s+'"></i> '+esc(b.n)+' <span class="badge s-'+b.s+'">'+(b.s==='crit'?'วิกฤติ / อันตราย':'เสี่ยง / เฝ้าระวัง')+'</span>';
+  $('mTbl').innerHTML='<tr><td>ความดัน P₂₀</td><td>'+b.P.toFixed(2)+' bar</td></tr><tr><td>อัตราการรั่ว</td><td>'+b.m.toFixed(4)+' bar/วัน</td></tr><tr><td>เหลือถึงจุดวิกฤต</td><td>'+dtxt(b.days)+'</td></tr><tr><td>ก๊าซที่ต้องเตรียม (เติมถึง 6.0 bar)</td><td><b>'+kg.toFixed(1)+' kg</b></td></tr>';
+  $('mWho').textContent=queue.length>1?'แจ้งเตือน '+(qi+1)+' จาก '+queue.length+' Bay':'';$('mNext').hidden=queue.length<2;
+  $('alertBg').hidden=false;draw($('mCv'),defs.p20[1](b));$('mGo').focus()}
+function closeAlert(){$('alertBg').hidden=true;queue=[];qi=0}
+$('mX').onclick=closeAlert;
+$('mNext').onclick=function(){qi=(qi+1)%queue.length;openAlert()};
+$('mGo').onclick=function(){var b=queue[qi];if(b){sel=bays.indexOf(b)}closeAlert();update();if(stage.dataset.v!=='mon')go('mon')};
+$('alertBg').onclick=function(e){if(e.target===this)closeAlert()};
+addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('alertBg').hidden)closeAlert()});
+function setAlT(){$('alT').setAttribute('aria-pressed',alertsOn);$('alT').textContent='แจ้งเตือน: '+(alertsOn?'เปิด':'ปิด')}
+$('alT').onclick=function(){alertsOn=!alertsOn;setAlT();save()};setAlT();
 
 // refill
 var tm=null,fill=0,start=5,totKg=0;
