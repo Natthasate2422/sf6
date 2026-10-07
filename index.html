@@ -1,848 +1,247 @@
 <!DOCTYPE html>
-<html lang="th" class="light">
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart SF6 Management Dashboard - EGAT</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        egat: {
-                            blue: '#003366',
-                            amber: '#f59e0b',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Icons & Tools -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Sarabun', sans-serif; transition: background-color 0.3s; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart SF₆ Dashboard (Prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#10243a;--mute:#5d6f82;--line:#d5dce4;--acc:#1f6fb2;--ok:#2e9e5b;--warn:#d99a00;--crit:#d6264a;--okbg:#e2f4e9;--warnbg:#fff3d1;--critbg:#fde4ea}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1a28;--card:#16273a;--ink:#e6edf5;--mute:#93a5b8;--line:#2a3d52;--acc:#5aa9e6;--okbg:#17372a;--warnbg:#3b3110;--critbg:#431b27}}
+:root[data-theme=dark]{--bg:#0e1a28;--card:#16273a;--ink:#e6edf5;--mute:#93a5b8;--line:#2a3d52;--acc:#5aa9e6;--okbg:#17372a;--warnbg:#3b3110;--critbg:#431b27}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 "IBM Plex Sans Thai",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1120px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{font-size:22px;margin:0;font-weight:700}
+h1 small{display:block;font-size:13px;color:var(--mute);font-weight:400}
+h2{font-size:16px;margin:0 0 10px;font-weight:600}
+.badge{padding:8px 16px;border-radius:999px;font-weight:700;font-size:15px}
+.s-ok{background:var(--okbg);color:var(--ok)}.s-warn{background:var(--warnbg);color:var(--warn)}.s-crit{background:var(--critbg);color:var(--crit)}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.kpi b{display:block;font-size:26px;line-height:1.2;font-weight:700}
+.kpi span{color:var(--mute);font-size:13px}
+.two{grid-template-columns:2fr 1fr;margin-bottom:12px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+canvas{width:100%;height:300px;display:block}
+label{display:block;font-size:13px;color:var(--mute);margin-top:10px}
+label output{float:right;color:var(--ink);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--acc)}
+input[type=number]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+button{font:inherit;padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pane{display:none}.pane.on{display:block}
+.wo{border-left:5px solid var(--warn)}.wo.crit{border-left-color:var(--crit)}
+.gauge{height:26px;border-radius:13px;background:var(--line);overflow:hidden;margin:10px 0}
+.gauge i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.gauge.done i{background:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+td:last-child,th:last-child{text-align:right}
+.note{font-size:12.5px;color:var(--mute)}
+.f{font-family:ui-monospace,Menlo,monospace;background:var(--bg);padding:8px 10px;border-radius:6px;font-size:13px;overflow-x:auto;margin:6px 0}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col pb-16 md:pb-0">
+<body>
+<div class="wrap">
+<header>
+  <h1>Smart SF₆ Leakage &amp; Regeneration<small>ต้นแบบ (Prototype) · สถานี 230kV GIS, Bay 03 · ข้อมูลจำลอง</small></h1>
+  <div style="display:flex;gap:8px;align-items:center"><span id="badge" class="badge s-ok">Normal</span><button id="theme" aria-label="สลับโหมดสว่าง/มืด">◐</button></div>
+</header>
 
-    <!-- Header / Navbar -->
-    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
-                <div class="bg-egat-blue text-amber-400 p-2 rounded-xl shadow">
-                    <i class="fa-solid fa-bolt text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="text-sm sm:text-base font-bold text-egat-blue dark:text-amber-400 leading-tight" data-i18n="app_title">SMART SF6 SYSTEM</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 hidden sm:block" data-i18n="app_subtitle">ระบบตรวจวัดและฟื้นฟูสภาพก๊าซ SF6 อัจฉริยะ (กฟผ.)</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-1.5 sm:space-x-2">
-                <button onclick="toggleSimPanel()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span class="hidden sm:inline" data-i18n="btn_sim">จำลองค่า & คำนวณความเสียหาย</span>
-                </button>
+<div class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-t="mon">ติดตามสถานะ</button>
+  <button role="tab" aria-selected="false" data-t="ref">เติมก๊าซและรายงาน</button>
+  <button role="tab" aria-selected="false" data-t="fin">ความคุ้มค่า</button>
+  <button role="tab" aria-selected="false" data-t="cal">สมการ/ทดสอบ ADC</button>
+</div>
 
-                <button onclick="toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
-                    <span id="lang-btn-text">TH</span>
-                </button>
-
-                <button onclick="toggleTheme()" class="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition">
-                    <i id="theme-icon" class="fa-solid fa-moon text-amber-500"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Interactive Simulation & Financial Damage Calculator Panel -->
-    <section id="sim-panel" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-4 shadow-inner border-b border-indigo-500/30">
-        <div class="max-w-7xl mx-auto space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-calculator"></i> <span data-i18n="sim_title">แผงจำลองค่าและคำนวณมูลค่าความเสียหายจากการรั่วไหล (Leakage Damage Calculator)</span>
-                </span>
-                <button onclick="resetSimulation()" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded text-slate-200 transition">
-                    <i class="fa-solid fa-rotate-left mr-1"></i><span data-i18n="sim_reset">รีเซ็ตค่า</span>
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                <!-- Slider 1: Pressure -->
-                <div class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300" data-i18n="sim_press">ความดัน SF6 (Bar):</span>
-                        <span id="sim-press-val" class="font-bold text-amber-300">6.12 Bar</span>
-                    </div>
-                    <input type="range" id="sim-press" min="5.0" max="6.5" step="0.05" value="6.12" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">
-                </div>
-
-                <!-- Slider 2: Purity -->
-                <div class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300" data-i18n="sim_purity">ความบริสุทธิ์ (%):</span>
-                        <span id="sim-purity-val" class="font-bold text-emerald-300">99.2 %</span>
-                    </div>
-                    <input type="range" id="sim-purity" min="95.0" max="100.0" step="0.1" value="99.2" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">
-                </div>
-
-                <!-- Slider 3: Leak Rate (อัตราการรั่วไหล) -->
-                <div class="bg-white/5 p-2.5 rounded-lg border border-white/10">
-                    <div class="flex justify-between text-[11px] mb-1">
-                        <span class="text-slate-300" data-i18n="sim_leak">อัตราก๊าซรั่วซึม (kg/เดือน):</span>
-                        <span id="sim-leak-val" class="font-bold text-rose-300">1.5 kg/m</span>
-                    </div>
-                    <input type="range" id="sim-leak" min="0.0" max="10.0" step="0.1" value="1.5" oninput="updateSimulation()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-400">
-                </div>
-
-                <!-- Calculated Financial Loss Display -->
-                <div class="bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-lg flex flex-col justify-center">
-                    <div class="text-[10px] text-rose-300 font-medium" data-i18n="sim_loss_label">ประเมินมูลค่าความเสียหายทางการเงิน:</div>
-                    <div class="flex items-baseline gap-1 mt-0.5">
-                        <span id="loss-cost-val" class="text-base font-bold text-rose-400">฿21,600</span>
-                        <span class="text-[10px] text-slate-300" data-i18n="per_year">/ปี</span>
-                    </div>
-                    <div class="text-[9px] text-slate-400 mt-0.5">
-                        <span data-i18n="sim_loss_co2">สูญเสียเทียบเท่า CO₂:</span> <span id="loss-co2-val" class="text-amber-300 font-semibold">423 tCO₂e</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content Area -->
-    <main id="dashboard-content" class="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-5">
-
-        <!-- Top Actions / Export Bar -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-sm gap-3">
-            <div>
-                <h2 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200" data-i18n="export_header">ศูนย์ส่งออกข้อมูลและสรุปรายงาน</h2>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400" data-i18n="export_desc">ดาวน์โหลดข้อมูลสถานะอุปกรณ์และการกู้คืนก๊าซ</p>
-            </div>
-            
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <button onclick="exportToExcel()" class="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-excel"></i> Excel
-                </button>
-                <button onclick="exportToPDF()" class="flex-1 sm:flex-initial px-3 py-1.5 bg-egat-blue hover:bg-blue-900 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-pdf"></i> PDF Summary
-                </button>
-            </div>
-        </div>
-
-        <!-- Key Indicators Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_status_label">สถานะรวม GIS</p>
-                        <h3 id="kpi-status-text" class="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5" data-i18n="st_normal">ปกติ (Normal)</h3>
-                    </div>
-                    <div id="kpi-status-icon" class="p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-lg">
-                        <i class="fa-solid fa-shield-halved text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p id="kpi-status-sub" class="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium">
-                    <i class="fa-solid fa-circle-check mr-1"></i> <span data-i18n="kpi_status_sub">ระบบทำงานสมบูรณ์</span>
-                </p>
-            </div>
-
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_sf6_label">กู้คืน SF6</p>
-                        <h3 class="text-base sm:text-lg font-bold text-egat-blue dark:text-sky-400 mt-0.5">20.0 <span class="text-[10px] font-normal text-slate-500" data-i18n="unit_kg_yr">kg/ปี</span></h3>
-                    </div>
-                    <div class="p-2 bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 rounded-lg">
-                        <i class="fa-solid fa-recycle text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2" data-i18n="kpi_sf6_sub">
-                    ลดสูญเสีย > 80%
-                </p>
-            </div>
-
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_esg_label">ลดก๊าซเรือนกระจก</p>
-                        <h3 class="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">470 <span class="text-[10px] font-normal text-slate-500">tCO₂e</span></h3>
-                    </div>
-                    <div class="p-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 rounded-lg">
-                        <i class="fa-solid fa-leaf text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium" data-i18n="kpi_esg_sub">
-                    GWP = 23,500 เท่า
-                </p>
-            </div>
-
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-i18n="kpi_roi_label">ประหยัดรวม (ROI)</p>
-                        <h3 class="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">฿87,000 <span class="text-[10px] font-normal text-slate-500" data-i18n="per_year">/ปี</span></h3>
-                    </div>
-                    <div class="p-2 bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 rounded-lg">
-                        <i class="fa-solid fa-piggy-bank text-sm sm:text-base"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2" data-i18n="kpi_roi_sub">
-                    คืนทุน ~20 เดือน
-                </p>
-            </div>
-
-        </div>
-
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            
-            <!-- Real-time Predictive Chart with Selector for GIS Compartments -->
-            <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-                    <div class="flex items-center gap-2">
-                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-chart-line text-egat-blue dark:text-amber-400"></i>
-                            <span data-i18n="chart_title">พยากรณ์ความดันก๊าซ (AI Predictive)</span>
-                        </h2>
-
-                        <!-- Dropdown เลือกตู้ GIS สำหรับดูพยากรณ์ -->
-                        <select id="chart-node-select" onchange="switchChartNode()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-lg px-2 py-1 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="Bay 01 - CB-01">Bay 01 - CB-01</option>
-                            <option value="Bay 02 - DS-02">Bay 02 - DS-02</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px]">
-                        <button onclick="updateChartRange('7D')" id="btn-7d" class="px-2 py-0.5 rounded font-semibold bg-white dark:bg-slate-700 text-egat-blue dark:text-amber-400 shadow-sm">7D</button>
-                        <button onclick="updateChartRange('30D')" id="btn-30d" class="px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">30D</button>
-                    </div>
-                </div>
-                
-                <div class="h-56 sm:h-64 w-full">
-                    <canvas id="pressureChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Gas Quality Meter -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                <div>
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5 mb-1">
-                        <i class="fa-solid fa-filter text-sky-600 dark:text-sky-400"></i>
-                        <span data-i18n="quality_title">ผลการตรวจวัดคุณภาพก๊าซ</span>
-                    </h2>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3" data-i18n="quality_subtitle">ตามมาตรฐาน IEC 60376</p>
-                    
-                    <div class="space-y-3">
-                        <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-600 dark:text-slate-300" data-i18n="purity_label">ความบริสุทธิ์</span>
-                                <span id="val-purity" class="text-emerald-600 dark:text-emerald-400 font-bold">99.2% (≥99%)</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="bar-purity" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 99.2%"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-600 dark:text-slate-300" data-i18n="moisture_label">ความชื้น</span>
-                                <span id="val-moisture" class="text-sky-600 dark:text-sky-400 font-bold">18 ppmv (≤25)</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="bar-moisture" class="bg-sky-500 h-full rounded-full transition-all duration-300" style="width: 72%"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-600 dark:text-slate-300" data-i18n="acid_label">ก๊าซกรดพิษ</span>
-                                <span id="val-acid" class="text-indigo-600 dark:text-indigo-400 font-bold">4 ppmv (≤12)</span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="bar-acid" class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: 33%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-3 p-2.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <div class="text-[11px]">
-                        <span class="text-slate-500 dark:text-slate-400 block" data-i18n="treatment_label">สถานะการบำบัด:</span>
-                        <span id="treatment-status" class="text-emerald-600 dark:text-emerald-400 font-bold" data-i18n="treatment_val">ผ่านเกณฑ์ เติมกลับได้</span>
-                    </div>
-                    <i id="treatment-icon" class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Table & Asset Tracking -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            
-            <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-server text-egat-blue dark:text-amber-400"></i>
-                        <span data-i18n="table_title">สถานะตู้ก๊าซ GIS Substation</span>
-                    </h2>
-                    
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <input type="text" id="search-input" onkeyup="filterTable()" placeholder="ค้นหา..." class="w-full sm:w-36 pl-3 pr-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs">
-                        
-                        <button onclick="openAddGisModal()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1 transition shadow-sm">
-                            <i class="fa-solid fa-plus"></i>
-                            <span data-i18n="btn_add_gis">เพิ่มตู้ GIS</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table id="gis-data-table" class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase border-b border-slate-200 dark:border-slate-800">
-                            <tr>
-                                <th class="p-2.5" data-i18n="th_device">ตู้ GIS</th>
-                                <th class="p-2.5" data-i18n="th_pressure">ความดัน</th>
-                                <th class="p-2.5" data-i18n="th_temp">อุณหภูมิ</th>
-                                <th class="p-2.5" data-i18n="th_status">สถานะ AI</th>
-                                <th class="p-2.5" data-i18n="th_action">การทำงาน</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <tr>
-                                <td class="p-2.5 font-semibold">Bay 01 - CB-01</td>
-                                <td id="tbl-press-1" class="p-2.5 text-emerald-600 dark:text-emerald-400 font-bold font-mono">6.20 Bar</td>
-                                <td class="p-2.5">34.5 °C</td>
-                                <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium" data-i18n="st_normal">ปกติ</span></td>
-                                <td class="p-2.5">
-                                    <button onclick="viewNodeChart('Bay 01 - CB-01')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded text-[10px] font-semibold">
-                                        <i class="fa-solid fa-chart-line mr-1"></i>ดูพยากรณ์
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="p-2.5 font-semibold">Bay 02 - DS-02</td>
-                                <td id="tbl-press-2" class="p-2.5 text-amber-600 dark:text-amber-400 font-bold font-mono">5.85 Bar</td>
-                                <td class="p-2.5">36.1 °C</td>
-                                <td class="p-2.5"><span id="tbl-status-2" class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold" data-i18n="st_warning">เฝ้าระวัง</span></td>
-                                <td class="p-2.5 flex items-center gap-1">
-                                    <button onclick="viewNodeChart('Bay 02 - DS-02')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded text-[10px] font-semibold">
-                                        <i class="fa-solid fa-chart-line mr-1"></i>ดูพยากรณ์
-                                    </button>
-                                    <button onclick="issueJobOrder('Bay 02 - DS-02')" class="px-2 py-1 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded text-[10px] font-semibold" data-i18n="btn_job">
-                                        ออก Job
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Asset Tracking Section -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                <div>
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm flex items-center gap-1.5 mb-2">
-                        <i class="fa-solid fa-qrcode text-egat-blue dark:text-amber-400"></i>
-                        <span data-i18n="tracking_title">Circular Tracking (ถังก๊าซ)</span>
-                    </h2>
-                    
-                    <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-                        <div class="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
-                            <span class="text-slate-500" data-i18n="lbl_cyl_id">รหัสถัง:</span>
-                            <span id="cyl-id" class="font-mono text-egat-blue dark:text-amber-400 font-bold">SF6-CYL-2026-089</span>
-                        </div>
-                        <div class="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
-                            <span class="text-slate-500" data-i18n="lbl_cyl_proc">สถานะถัง:</span>
-                            <span id="cyl-status" class="text-emerald-600 dark:text-emerald-400 font-bold" data-i18n="cyl_ready">พร้อมใช้งาน</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500" data-i18n="lbl_cyl_vol">ปริมาณก๊าซ:</span>
-                            <span class="font-semibold">40.0 kg</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="simulateScanQR()" class="w-full mt-3 py-2 bg-egat-blue text-white dark:bg-amber-500 dark:text-slate-950 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow">
-                    <i class="fa-solid fa-barcode"></i> <span data-i18n="btn_scan">สแกน QR Code ถังใหม่</span>
-                </button>
-            </div>
-
-        </div>
-
-    </main>
-
-    <!-- Modal ฟอร์มเพิ่มตู้ก๊าซ GIS -->
-    <div id="add-gis-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-xl p-5 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <i class="fa-solid fa-plus-circle text-emerald-500"></i>
-                    <span data-i18n="modal_title">เพิ่มตู้ก๊าซ GIS ใหม่</span>
-                </h3>
-                <button onclick="closeAddGisModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form onsubmit="handleAddGis(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-slate-600 dark:text-slate-400 mb-1 font-medium" data-i18n="lbl_gis_name">ชื่อตู้ GIS (Compartment Name)</label>
-                    <input type="text" id="new-gis-name" required placeholder="เช่น Bay 03 - CB-03" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-600 dark:text-slate-400 mb-1 font-medium" data-i18n="lbl_gis_press">ความดัน (Bar)</label>
-                        <input type="number" step="0.01" id="new-gis-press" required placeholder="6.10" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 dark:text-slate-400 mb-1 font-medium" data-i18n="lbl_gis_temp">อุณหภูมิ (°C)</label>
-                        <input type="number" step="0.1" id="new-gis-temp" required placeholder="35.0" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 mt-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <button type="button" onclick="closeAddGisModal()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-semibold" data-i18n="btn_cancel">ยกเลิก</button>
-                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow" data-i18n="btn_save">บันทึกข้อมูล</button>
-                </div>
-            </form>
-        </div>
+<section id="mon" class="pane on">
+  <div class="grid kpis">
+    <div class="card kpi"><b id="kT">–</b><span>อุณหภูมิ T (°C)</span></div>
+    <div class="card kpi"><b id="kPT">–</b><span>ความดันดิบ P_T (bar)</span></div>
+    <div class="card kpi"><b id="kP20">–</b><span>ความดันชดเชย P₂₀ (bar)</span></div>
+    <div class="card kpi"><b id="kM">–</b><span>อัตราการรั่ว m (bar/วัน)</span></div>
+    <div class="card kpi"><b id="kD">–</b><span>วันที่เหลือถึงจุดวิกฤต</span></div>
+  </div>
+  <div class="grid two">
+    <div class="card"><h2>P₂₀ ย้อนหลัง 30 วัน และเส้นพยากรณ์</h2><canvas id="cv" aria-label="กราฟความดัน P20"></canvas>
+      <p class="note">เส้นประเหลือง = Warning 5.4 bar · เส้นประแดง = Critical 4.7 bar · เส้นฟ้าประ = Linear Regression</p></div>
+    <div class="card"><h2>จำลองสถานการณ์</h2>
+      <div class="row"><button data-sc="ok">Normal</button><button data-sc="warn">Warning</button><button data-sc="crit">Critical</button></div>
+      <label>ความดัน P₂₀ ปัจจุบัน (bar)<output id="oP"></output></label><input id="iP" type="range" min="3.5" max="6.2" step="0.01" value="5.9">
+      <label>อัตราการรั่ว (bar/วัน)<output id="oL"></output></label><input id="iL" type="range" min="0" max="0.06" step="0.001" value="0.002">
+      <label>อุณหภูมิแวดล้อม (°C)<output id="oT"></output></label><input id="iT" type="range" min="-5" max="45" step="0.5" value="32">
+      <p class="note">ปรับอุณหภูมิ แล้วดูว่า P_T เปลี่ยน แต่ P₂₀ ไม่เปลี่ยน (ป้องกัน False Alarm)</p>
     </div>
+  </div>
+  <div id="wo" class="card wo" hidden></div>
+</section>
 
-    <!-- Mobile Navigation Bar -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around py-2 px-3 z-50 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-0.5 text-egat-blue dark:text-amber-400">
-            <i class="fa-solid fa-gauge text-base"></i>
-            <span data-i18n="nav_home">หน้าหลัก</span>
-        </button>
-        <button onclick="document.getElementById('pressureChart').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-0.5">
-            <i class="fa-solid fa-chart-line text-base"></i>
-            <span data-i18n="nav_predict">พยากรณ์</span>
-        </button>
-        <button onclick="document.getElementById('gis-data-table').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-0.5">
-            <i class="fa-solid fa-server text-base"></i>
-            <span data-i18n="nav_gis">ตู้ GIS</span>
-        </button>
-        <button onclick="exportToPDF()" class="flex flex-col items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
-            <i class="fa-solid fa-file-pdf text-base"></i>
-            <span>Export</span>
-        </button>
-    </nav>
+<section id="ref" class="pane">
+  <div class="grid two">
+    <div class="card"><h2>Live Refill Assistant</h2>
+      <p class="note">ช่างเชื่อมต่อดูค่า P₂₀ ระหว่างอัดก๊าซกลับ ถึง 6.0 bar จะแจ้งให้ปิดวาล์ว</p>
+      <div style="font-size:34px;font-weight:700"><span id="rv">0.00</span> bar</div>
+      <div id="rg" class="gauge"><i id="rb"></i></div>
+      <div id="rmsg" class="note">กด “เริ่มเติมก๊าซ”</div>
+      <div class="row"><button class="p" id="rs">เริ่มเติมก๊าซ</button><button id="rr">รีเซ็ต</button></div>
+      <label>ปริมาณก๊าซเมื่อเต็ม 6.0 bar (kg) – ค่าสมมติ ปรับตามตู้จริง<output></output></label><input id="mfull" type="number" value="40" min="1" step="0.5">
+    </div>
+    <div class="card"><h2>MRV &amp; ESG (สะสมในเดโมนี้)</h2>
+      <table>
+        <tr><td>น้ำหนักก๊าซที่เติมกลับ</td><td id="mk">0.0 kg</td></tr>
+        <tr><td>CO₂ Equivalent ที่เก็บไว้ (× GWP 23,500)</td><td id="mc">0.00 tCO₂eq</td></tr>
+      </table>
+      <div class="row"><button id="exp">Export CSV</button></div>
+      <p class="note">น้ำหนักที่เติม = M_full × (6.0 − P₂₀เริ่มต้น) / 6.0 (สมมติปริมาตรคงที่ ความดันแปรผันตามมวล)</p>
+    </div>
+  </div>
+</section>
 
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-3 px-4 text-center text-[11px] text-slate-500 hidden md:block">
-        <p data-i18n="footer_project">โครงการ EGAT GREEN I ปีที่ 3 "GREEN INNO FOR ESG & CIRCULAR FUTURE"</p>
-        <p class="mt-0.5 font-medium" data-i18n="footer_team">พัฒนาโดย ทีมฝั่งธนไม่หมูอะบูดาบี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี (มดธ.)</p>
-    </footer>
+<section id="fin" class="pane">
+  <div class="grid two">
+    <div class="card"><h2>CAPEX ต่อ 1 สถานี</h2>
+      <table id="capex"></table></div>
+    <div class="card"><h2>ผลประโยชน์ต่อปี</h2>
+      <label>ราคาก๊าซ SF₆ (บาท/กก.)</label><input id="fpr" type="number" value="600">
+      <label>ก๊าซส่วนเกินที่กู้คืน (กก./ปี)</label><input id="fkg" type="number" value="2.5" step="0.1">
+      <label>พลังงานสูญเสียหากเกิด Outage (kWh)</label><input id="fkwh" type="number" value="15000">
+      <label>ค่าความเสียหาย VoLL (บาท/kWh)</label><input id="fv" type="number" value="50.27" step="0.01">
+      <label>ความน่าจะเป็นเกิดเหตุ</label><input id="fp" type="number" value="0.1" step="0.01">
+      <label>ประสิทธิภาพ AI</label><input id="fe" type="number" value="0.9" step="0.05">
+      <table id="ben" style="margin-top:10px"></table>
+      <p id="payback" style="font-weight:600"></p>
+      <p class="note">หมายเหตุ: ในเอกสารต้นฉบับ VoLL เขียน 678,690 บาท แต่ (15,000 × 50.27 × 0.1 × 0.9) = 67,864.5 บาท จึงคำนวณใหม่ให้ที่นี่ ระยะคืนทุนเลยเปลี่ยนตาม</p></div>
+  </div>
+  <div class="card"><h2>คาร์บอนเครดิต (T-VER)</h2>
+    <table><tr><td>ลดการปล่อย ER = ก๊าซส่วนเกิน × 23,500</td><td id="er"></td></tr>
+    <tr><td>หัก Project Emissions (PE)</td><td>0.142 tCO₂eq/ปี</td></tr>
+    <tr><td><b>Net Carbon Credit</b></td><td id="net"></td></tr></table></div>
+</section>
 
-    <!-- JavaScript Scripting -->
-    <script>
-        // Data Store for Node Predictions
-        const nodeChartData = {
-            'Bay 01 - CB-01': {
-                actual: [6.25, 6.24, 6.23, 6.22, 6.21, 6.20, null],
-                predict: [null, null, null, null, null, 6.20, 6.18],
-            },
-            'Bay 02 - DS-02': {
-                actual: [6.15, 6.08, 6.01, 5.95, 5.90, 5.85, null],
-                predict: [null, null, null, null, null, 5.85, 5.76],
-            }
-        };
+<section id="cal" class="pane">
+  <div class="grid two">
+    <div class="card"><h2>ทดสอบสมการ ADC → P_T → P₂₀</h2>
+      <label>กระแสเซนเซอร์ I_loop (mA)<output id="oI"></output></label><input id="iI" type="range" min="4" max="20" step="0.01" value="12.4">
+      <label>อุณหภูมิ T (°C)<output id="oT2"></output></label><input id="iT2" type="range" min="-5" max="45" step="0.5" value="35">
+      <table style="margin-top:10px"><tr><td>V_in = I × 250Ω</td><td id="cV"></td></tr><tr><td>P_T</td><td id="cP"></td></tr><tr><td>P₂₀</td><td id="cP20"></td></tr></table>
+    </div>
+    <div class="card"><h2>สมการ</h2>
+      <div class="f">P_T = 0 + (V_in − 1)/(5 − 1) × 10</div>
+      <div class="f">P₂₀ = P_T × (273.15+20)/(273.15+T)</div>
+      <div class="f">m = (NΣtP − ΣtΣP) / (NΣt² − (Σt)²)</div>
+      <div class="f">t_remaining = (P_current − P_critical)/|m|</div>
+      <p class="note">เกณฑ์สถานะที่ใช้: Normal ≥ 5.4 bar · Warning 4.7–5.4 bar หรือคาดว่าถึงจุดวิกฤตใน ≤ 90 วัน · Critical &lt; 4.7 bar (เอกสารต้นฉบับระบุช่วง Warning 4.0–5.3 ซึ่งทับกับ Critical จึงปรับให้ต่อเนื่อง)</p>
+      <p class="note">ข้อควรระวัง: กฎของก๊าซใช้ความดันสัมบูรณ์ ถ้า transmitter เป็นแบบ gauge ควรบวกความดันบรรยากาศก่อนชดเชย</p>
+    </div>
+  </div>
+</section>
+<p class="note">ข้อมูลทั้งหมดเป็นการจำลองเพื่อสาธิตแนวคิด ไม่ได้เชื่อมต่อเซนเซอร์จริง · ต่อ MQTT/InfluxDB ได้ที่ฟังก์ชัน <code>buildHistory()</code></p>
+</div>
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('theme-icon');
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-moon text-amber-500';
-            } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-sun text-amber-400';
-            }
-        }
+<script>
+(function(){
+var CRIT=4.7,WARN=5.4,FULL=6.0,GWP=23500,N=30;
+var $=function(i){return document.getElementById(i)};
+var st={P:5.9,L:0.002,T:32,hist:[]};
 
-        function toggleSimPanel() {
-            const panel = document.getElementById('sim-panel');
-            panel.classList.toggle('hidden');
-        }
+// theme + tabs
+$('theme').onclick=function(){var r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark';draw()};
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('.tabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id===b.dataset.t)});draw()}});
 
-        // Translation System
-        let currentLang = 'TH';
-        const translations = {
-            TH: {
-                app_title: "SMART SF6 SYSTEM",
-                app_subtitle: "ระบบตรวจวัดและฟื้นฟูสภาพก๊าซ SF6 อัจฉริยะ (กฟผ.)",
-                btn_sim: "จำลองค่า & คำนวณความเสียหาย",
-                sim_title: "แผงจำลองค่าและคำนวณมูลค่าความเสียหายจากการรั่วไหล (Leakage Damage Calculator)",
-                sim_reset: "รีเซ็ตค่า",
-                sim_press: "ความดัน SF6 (Bar):",
-                sim_purity: "ความบริสุทธิ์ (%):",
-                sim_leak: "อัตราก๊าซรั่วซึม (kg/เดือน):",
-                sim_loss_label: "ประเมินมูลค่าความเสียหายทางการเงิน:",
-                sim_loss_co2: "สูญเสียเทียบเท่า CO₂:",
-                export_header: "ศูนย์ส่งออกข้อมูลและสรุปรายงาน",
-                export_desc: "ดาวน์โหลดข้อมูลสถานะอุปกรณ์และการกู้คืนก๊าซ",
-                kpi_status_label: "สถานะรวม GIS",
-                kpi_status_sub: "ระบบทำงานสมบูรณ์",
-                kpi_sf6_label: "กู้คืน SF6",
-                kpi_sf6_sub: "ลดสูญเสีย > 80%",
-                kpi_esg_label: "ลดก๊าซเรือนกระจก",
-                kpi_esg_sub: "GWP = 23,500 เท่า",
-                kpi_roi_label: "ประหยัดรวม (ROI)",
-                kpi_roi_sub: "คืนทุน ~20 เดือน",
-                per_year: "/ปี",
-                unit_kg_yr: "kg/ปี",
-                chart_title: "พยากรณ์ความดันก๊าซ (AI Predictive)",
-                quality_title: "ผลการตรวจวัดคุณภาพก๊าซ",
-                quality_subtitle: "ตามมาตรฐาน IEC 60376",
-                purity_label: "ความบริสุทธิ์",
-                moisture_label: "ความชื้น",
-                acid_label: "ก๊าซกรดพิษ",
-                treatment_label: "สถานะการบำบัด:",
-                treatment_val: "ผ่านเกณฑ์ เติมกลับได้",
-                table_title: "สถานะตู้ก๊าซ GIS Substation",
-                btn_add_gis: "เพิ่มตู้ GIS",
-                th_device: "ตู้ GIS",
-                th_pressure: "ความดัน",
-                th_temp: "อุณหภูมิ",
-                th_status: "สถานะ AI",
-                th_action: "การทำงาน",
-                st_normal: "ปกติ",
-                st_warning: "เฝ้าระวัง",
-                st_critical: "วิกฤต",
-                btn_job: "ออก Job",
-                tracking_title: "Circular Tracking (ถังก๊าซ)",
-                lbl_cyl_id: "รหัสถัง:",
-                lbl_cyl_proc: "สถานะถัง:",
-                cyl_ready: "พร้อมใช้งาน",
-                lbl_cyl_vol: "ปริมาณก๊าซ:",
-                btn_scan: "สแกน QR Code ถังใหม่",
-                modal_title: "เพิ่มตู้ก๊าซ GIS ใหม่",
-                lbl_gis_name: "ชื่อตู้ GIS (Compartment Name)",
-                lbl_gis_press: "ความดัน (Bar)",
-                lbl_gis_temp: "อุณหภูมิ (°C)",
-                btn_cancel: "ยกเลิก",
-                btn_save: "บันทึกข้อมูล",
-                nav_home: "หน้าหลัก",
-                nav_predict: "พยากรณ์",
-                nav_gis: "ตู้ GIS",
-                footer_project: "โครงการ EGAT GREEN I ปีที่ 3 \"GREEN INNO FOR ESG & CIRCULAR FUTURE\"",
-                footer_team: "พัฒนาโดย ทีมฝั่งธนไม่หมูอะบูดาบี มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี (มดธ.)"
-            },
-            EN: {
-                app_title: "SMART SF6 SYSTEM",
-                app_subtitle: "Smart Monitoring & Regeneration System for SF6 (EGAT)",
-                btn_sim: "Simulate & Loss Calc",
-                sim_title: "Leakage Financial Damage & Simulation Panel",
-                sim_reset: "Reset",
-                sim_press: "SF6 Pressure (Bar):",
-                sim_purity: "Purity (%):",
-                sim_leak: "Leakage Rate (kg/mo):",
-                sim_loss_label: "Estimated Financial Damage:",
-                sim_loss_co2: "CO₂ Equivalent Loss:",
-                export_header: "Export & Report Center",
-                export_desc: "Download equipment and gas recovery summary data",
-                kpi_status_label: "Overall GIS Status",
-                kpi_status_sub: "System Operating Normally",
-                kpi_sf6_label: "SF6 Recovered",
-                kpi_sf6_sub: "Loss Reduced > 80%",
-                kpi_esg_label: "GHG Reduction",
-                kpi_esg_sub: "GWP = 23,500x",
-                kpi_roi_label: "Cost Savings (ROI)",
-                kpi_roi_sub: "Payback ~20 Months",
-                per_year: "/yr",
-                unit_kg_yr: "kg/yr",
-                chart_title: "Gas Pressure AI Predictive",
-                quality_title: "Gas Quality Analysis",
-                quality_subtitle: "IEC 60376 Standard",
-                purity_label: "Purity",
-                moisture_label: "Moisture",
-                acid_label: "Toxic Acid Gas",
-                treatment_label: "Purification Status:",
-                treatment_val: "Passed & Ready for Refill",
-                table_title: "GIS Compartment Live Status",
-                btn_add_gis: "Add GIS Node",
-                th_device: "GIS Node",
-                th_pressure: "Pressure",
-                th_temp: "Temp",
-                th_status: "AI Status",
-                th_action: "Action",
-                st_normal: "Normal",
-                st_warning: "Warning",
-                st_critical: "Critical",
-                btn_job: "Issue Job",
-                tracking_title: "Circular Cylinder Tracking",
-                lbl_cyl_id: "Cylinder ID:",
-                lbl_cyl_proc: "Status:",
-                cyl_ready: "Ready for Use",
-                lbl_cyl_vol: "Gas Volume:",
-                btn_scan: "Simulate Scan QR Code",
-                modal_title: "Add New GIS Compartment",
-                lbl_gis_name: "Compartment Name",
-                lbl_gis_press: "Pressure (Bar)",
-                lbl_gis_temp: "Temperature (°C)",
-                btn_cancel: "Cancel",
-                btn_save: "Save Data",
-                nav_home: "Home",
-                nav_predict: "Predict",
-                nav_gis: "GIS Nodes",
-                footer_project: "EGAT GREEN I Year 3 \"GREEN INNO FOR ESG & CIRCULAR FUTURE\"",
-                footer_team: "Developed by Thonburi Abu Dhabi Team, KMUTT"
-            },
-            ZH: {
-                app_title: "智能 SF6 管理系统",
-                app_subtitle: "SF6 气体智能监测与再生系统 (EGAT)",
-                btn_sim: "模拟与损失计算",
-                sim_title: "气体泄漏损失计算与模拟面板",
-                sim_reset: "重置",
-                sim_press: "SF6 压力 (Bar):",
-                sim_purity: "纯度 (%):",
-                sim_leak: "泄漏率 (kg/月):",
-                sim_loss_label: "预估财务损失:",
-                sim_loss_co2: "二氧化碳当量损失:",
-                export_header: "数据导出与报告中心",
-                export_desc: "下载设备状态与气体回收汇总报告",
-                kpi_status_label: "GIS 总体状态",
-                kpi_status_sub: "系统运行正常",
-                kpi_sf6_label: "SF6 回收量",
-                kpi_sf6_sub: "减少损失 > 80%",
-                kpi_esg_label: "温室气体减排",
-                kpi_esg_sub: "GWP = 23,500 倍",
-                kpi_roi_label: "总计节省 (ROI)",
-                kpi_roi_sub: "投资回收期 ~20 个月",
-                per_year: "/年",
-                unit_kg_yr: "kg/年",
-                chart_title: "SF6 压力 AI 预测",
-                quality_title: "气体质量检测",
-                quality_subtitle: "IEC 60376 标准",
-                purity_label: "纯度",
-                moisture_label: "湿度",
-                acid_label: "酸性毒性气体",
-                treatment_label: "净化状态:",
-                treatment_val: "合格 可重新充入",
-                table_title: "GIS 变电站气室状态",
-                btn_add_gis: "添加 GIS 气室",
-                th_device: "GIS 气室",
-                th_pressure: "压力",
-                th_temp: "温度",
-                th_status: "AI 状态",
-                th_action: "操作",
-                st_normal: "正常",
-                st_warning: "预警",
-                st_critical: "严重",
-                btn_job: "派工单",
-                tracking_title: "循环气瓶追踪",
-                lbl_cyl_id: "气瓶编号:",
-                lbl_cyl_proc: "气瓶状态:",
-                cyl_ready: "准备就绪",
-                lbl_cyl_vol: "气体容量:",
-                btn_scan: "扫描新二维码",
-                modal_title: "添加新的 GIS 气室",
-                lbl_gis_name: "气室名称",
-                lbl_gis_press: "压力 (Bar)",
-                lbl_gis_temp: "温度 (°C)",
-                btn_cancel: "取消",
-                btn_save: "保存数据",
-                nav_home: "首页",
-                nav_predict: "预测",
-                nav_gis: "GIS 气室",
-                footer_project: "EGAT GREEN I 第三年项目 \"GREEN INNO FOR ESG & CIRCULAR FUTURE\"",
-                footer_team: "由 KMUTT 吞武里阿布扎比团队开发"
-            }
-        };
+// physics
+function toP20(PT,T){return PT*(293.15/(273.15+T))}
+function toPT(P20,T){return P20*((273.15+T)/293.15)}
+function adc(mA){var V=mA*0.25,P=(V-1)/(5-1)*10;return{V:V,P:P}}
+function reg(ys){var n=ys.length,sx=0,sy=0,sxy=0,sxx=0;for(var i=0;i<n;i++){sx+=i;sy+=ys[i];sxy+=i*ys[i];sxx+=i*i}
+  var m=(n*sxy-sx*sy)/(n*sxx-sx*sx);return{m:m,b:(sy-m*sx)/n}}
+function seed(i){var x=Math.sin(i*12.9898+7)*43758.5453;return x-Math.floor(x)}
+function buildHistory(){ // replace with real data (MQTT/InfluxDB)
+  var h=[];for(var i=0;i<N;i++){var P20=st.P+st.L*(N-1-i)+(seed(i)-.5)*0.012;
+    var T=st.T+4*Math.sin(i/2.3)+(seed(i+50)-.5);h.push({T:T,PT:toPT(P20,T),P20:toP20(toPT(P20,T),T)})}
+  h[N-1].T=st.T;h[N-1].PT=toPT(st.P,st.T);h[N-1].P20=st.P;return h}
 
-        function toggleLanguage() {
-            if (currentLang === 'TH') currentLang = 'EN';
-            else if (currentLang === 'EN') currentLang = 'ZH';
-            else currentLang = 'TH';
+function status(P,days){return P<CRIT?'crit':(P<WARN||(days!==null&&days<=90))?'warn':'ok'}
+var cur={};
+function update(){
+  st.hist=buildHistory();var ys=st.hist.map(function(d){return d.P20}),r=reg(ys),last=st.hist[N-1];
+  var m=r.m,P=last.P20,days=m<-1e-6?Math.max(0,(P-CRIT)/Math.abs(m)):null,s=status(P,days);
+  cur={r:r,P:P,days:days,s:s,m:m};
+  $('kT').textContent=last.T.toFixed(1);$('kPT').textContent=last.PT.toFixed(2);$('kP20').textContent=P.toFixed(2);
+  $('kM').textContent=m.toFixed(4);$('kD').textContent=days===null?'ไม่มีแนวโน้มรั่ว':Math.round(days)+' วัน';
+  var b=$('badge');b.className='badge s-'+s;b.textContent={ok:'Normal',warn:'เสี่ยง / เฝ้าระวัง',crit:'วิกฤติ / อันตราย'}[s];
+  $('oP').textContent=st.P.toFixed(2);$('oL').textContent=st.L.toFixed(3);$('oT').textContent=st.T.toFixed(1);
+  workOrder();draw()}
 
-            document.getElementById('lang-btn-text').innerText = currentLang;
-            
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[currentLang][key]) el.innerHTML = translations[currentLang][key];
-            });
-        }
+function workOrder(){var w=$('wo');if(cur.s==='ok'){w.hidden=true;return}
+  var mf=+$('mfull').value||40,kg=Math.max(0,mf*(FULL-cur.P)/FULL);w.hidden=false;w.className='card wo'+(cur.s==='crit'?' crit':'');
+  w.innerHTML='<h2>'+(cur.s==='crit'?'แจ้งเตือนทันที: ใบสั่งงานฉุกเฉิน':'ใบสั่งงานดิจิทัล (Digital Work Order)')+'</h2>'+
+  '<table><tr><td>สถานที่</td><td>230kV GIS, Bay 03</td></tr><tr><td>ความดัน P₂₀ ตอนนี้</td><td>'+cur.P.toFixed(2)+' bar</td></tr>'+
+  '<tr><td>ก๊าซที่ต้องเตรียม (เติมถึง 6.0 bar)</td><td><b>'+kg.toFixed(1)+' kg</b></td></tr>'+
+  '<tr><td>แนะนำ</td><td>'+(cur.s==='crit'?'เข้าหน้างานก่อนระบบป้องกันสั่ง Lockout / ทริป':'วางแผนเติมก๊าซและเข้าบำรุงรักษาประจำเดือน')+'</td></tr></table>'}
 
-        // Chart Initialization
-        const ctx = document.getElementById('pressureChart').getContext('2d');
-        let chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['1 Mar', '2 Mar', '3 Mar', '4 Mar', '5 Mar', 'Today', 'Predict'],
-                datasets: [
-                    { label: 'ความดันจริง (Bar)', data: [...nodeChartData['Bay 02 - DS-02'].actual], borderColor: '#003366', backgroundColor: 'rgba(0,51,102,0.08)', borderWidth: 2, fill: true, tension: 0.3 },
-                    { label: 'AI Trend', data: [...nodeChartData['Bay 02 - DS-02'].predict], borderColor: '#f59e0b', borderDash: [4, 4], borderWidth: 2, tension: 0.3 },
-                    { label: 'Critical Limit', data: [5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5], borderColor: '#ef4444', borderWidth: 1, pointRadius: 0 }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+// chart
+function draw(){var c=$('cv');if(!c.offsetWidth)return;var d=devicePixelRatio||1,W=c.offsetWidth,H=300;c.width=W*d;c.height=H*d;
+  var x=c.getContext('2d');x.scale(d,d);var cs=getComputedStyle(document.documentElement),col=function(n){return cs.getPropertyValue(n).trim()};
+  var L=42,R=10,T=10,B=26,lo=3.5,hi=6.4;if(!st.hist.length)return;
+  var X=function(i){return L+(W-L-R)*i/(N-1)},Y=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo))};
+  x.font='12px sans-serif';x.fillStyle=col('--mute');x.strokeStyle=col('--line');x.lineWidth=1;
+  for(var v=3.5;v<=6.4;v+=0.5){x.beginPath();x.moveTo(L,Y(v));x.lineTo(W-R,Y(v));x.stroke();x.fillText(v.toFixed(1),6,Y(v)+4)}
+  x.fillText('-30 วัน',L,H-8);x.fillText('วันนี้',W-R-28,H-8);
+  function hl(v,cc){x.save();x.setLineDash([6,4]);x.strokeStyle=cc;x.lineWidth=1.5;x.beginPath();x.moveTo(L,Y(v));x.lineTo(W-R,Y(v));x.stroke();x.restore()}
+  hl(WARN,col('--warn'));hl(CRIT,col('--crit'));
+  x.strokeStyle=col('--acc');x.lineWidth=2;x.beginPath();st.hist.forEach(function(p,i){i?x.lineTo(X(i),Y(p.P20)):x.moveTo(X(i),Y(p.P20))});x.stroke();
+  x.save();x.setLineDash([3,4]);x.beginPath();x.moveTo(X(0),Y(cur.r.b));x.lineTo(X(N-1),Y(cur.r.b+cur.r.m*(N-1)));x.stroke();x.restore();
+  x.fillStyle=col('--acc');st.hist.forEach(function(p,i){x.beginPath();x.arc(X(i),Y(p.P20),2.2,0,7);x.fill()})}
+addEventListener('resize',draw);
 
-        // Switch GIS Node in Chart
-        function switchChartNode() {
-            const selectedNode = document.getElementById('chart-node-select').value;
-            if (nodeChartData[selectedNode]) {
-                chart.data.datasets[0].data = [...nodeChartData[selectedNode].actual];
-                chart.data.datasets[1].data = [...nodeChartData[selectedNode].predict];
-                chart.update();
-            }
-        }
+// controls
+function bind(id,key){$(id).oninput=function(){st[key]=+this.value;update()}}
+bind('iP','P');bind('iL','L');bind('iT','T');
+document.querySelectorAll('[data-sc]').forEach(function(b){b.onclick=function(){
+  var s={ok:[5.9,0.002],warn:[5.25,0.018],crit:[4.6,0.03]}[b.dataset.sc];st.P=s[0];st.L=s[1];$('iP').value=s[0];$('iL').value=s[1];update()}});
+$('mfull').oninput=workOrder;
 
-        function viewNodeChart(nodeName) {
-            const select = document.getElementById('chart-node-select');
-            select.value = nodeName;
-            switchChartNode();
-            document.getElementById('pressureChart').scrollIntoView({ behavior: 'smooth' });
-        }
+// refill
+var tm=null,fill=0,start=5,added=0,totKg=0;
+function rv(v){$('rv').textContent=v.toFixed(2);$('rb').style.width=Math.min(100,v/FULL*100)+'%';
+  $('rg').classList.toggle('done',v>=FULL)}
+$('rs').onclick=function(){if(tm)return;fill=Math.min(cur.P||5,5.95);start=fill;rv(fill);$('rmsg').textContent='กำลังเติม… (ค่า P₂₀ จากหน้าตู้)';
+  tm=setInterval(function(){fill+=0.03;if(fill>=FULL){fill=FULL;clearInterval(tm);tm=null;
+    var kg=(+$('mfull').value||40)*(FULL-start)/FULL;totKg+=kg;$('rmsg').innerHTML='<b style="color:var(--ok)">Target Reached: ปิดวาล์วได้ทันที</b> (เติม '+kg.toFixed(1)+' kg)';
+    if(navigator.vibrate)navigator.vibrate(200);mrv()}rv(fill)},120)};
+$('rr').onclick=function(){clearInterval(tm);tm=null;rv(0);$('rmsg').textContent='กด “เริ่มเติมก๊าซ”'};
+function mrv(){$('mk').textContent=totKg.toFixed(1)+' kg';$('mc').textContent=(totKg*GWP/1000).toFixed(2)+' tCO₂eq'}
+$('exp').onclick=function(){var csv='refilled_kg,tCO2eq\n'+totKg.toFixed(2)+','+(totKg*GWP/1000).toFixed(3);
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sf6_mrv.csv';a.click()};
 
-        function updateChartRange(range) {
-            const btn7 = document.getElementById('btn-7d');
-            const btn30 = document.getElementById('btn-30d');
-            if(range==='7D') {
-                chart.data.labels = ['1 Mar', '2 Mar', '3 Mar', '4 Mar', '5 Mar', 'Today', 'Predict'];
-                btn7.className = "px-2 py-0.5 rounded font-semibold bg-white dark:bg-slate-700 text-egat-blue dark:text-amber-400 shadow-sm";
-                btn30.className = "px-2 py-0.5 rounded text-slate-600 dark:text-slate-400";
-            } else {
-                chart.data.labels = ['W1', 'W2', 'W3', 'W4 (Today)', 'W5 (Predict)', 'W6 (Predict)'];
-                btn30.className = "px-2 py-0.5 rounded font-semibold bg-white dark:bg-slate-700 text-egat-blue dark:text-amber-400 shadow-sm";
-                btn7.className = "px-2 py-0.5 rounded text-slate-600 dark:text-slate-400";
-            }
-            chart.update();
-        }
+// finance
+var cap=[['เซนเซอร์ความดัน/อุณหภูมิ 3 ตัว',45000],['บอร์ด Edge IoT ESP32-S3 2 ชุด',10000],['ตู้ป้องกัน EMI & Surge',35000],['Industrial 4G/LTE & MQTT Gateway',20000],['Cloud / InfluxDB / AI Dashboard (ปีแรก)',100000],['ติดตั้งและทดสอบระบบ',150000],['Contingency & UPS',250000]];
+var capT=cap.reduce(function(a,c){return a+c[1]},0),f=function(n){return Math.round(n).toLocaleString('th-TH')};
+$('capex').innerHTML=cap.map(function(c){return'<tr><td>'+c[0]+'</td><td>'+f(c[1])+'</td></tr>'}).join('')+'<tr><td><b>รวม</b></td><td><b>'+f(capT)+' บาท</b></td></tr>';
+function fin(){var g=+$('fpr').value*+$('fkg').value,lab=12*2500,v=+$('fkwh').value*+$('fv').value*+$('fp').value*+$('fe').value,t=g+lab+v;
+  $('ben').innerHTML='<tr><td>1. ประหยัดค่าก๊าซใหม่</td><td>'+f(g)+'</td></tr><tr><td>2. ลดค่าเดินทางทีมช่าง (12 รอบ × 2,500)</td><td>'+f(lab)+'</td></tr><tr><td>3. VoLL ป้องกันไฟดับ</td><td>'+f(v)+'</td></tr><tr><td><b>รวม บาท/ปี</b></td><td><b>'+f(t)+'</b></td></tr>';
+  $('payback').textContent='ระยะเวลาคืนทุน ≈ '+(capT/t).toFixed(2)+' ปี ('+Math.round(capT/t*12)+' เดือน)';
+  var er=+$('fkg').value*GWP/1000;$('er').textContent=er.toFixed(2)+' tCO₂eq/ปี';$('net').textContent=(er-0.142).toFixed(2)+' tCO₂eq/ปี/สถานี'}
+['fpr','fkg','fkwh','fv','fp','fe'].forEach(function(i){$(i).oninput=fin});fin();
 
-        // Calculation & Simulation Updates
-        function updateSimulation() {
-            const press = parseFloat(document.getElementById('sim-press').value);
-            const purity = parseFloat(document.getElementById('sim-purity').value);
-            const leakRate = parseFloat(document.getElementById('sim-leak').value); // kg/month
-
-            document.getElementById('sim-press-val').innerText = press.toFixed(2) + ' Bar';
-            document.getElementById('sim-purity-val').innerText = purity.toFixed(1) + ' %';
-            document.getElementById('sim-leak-val').innerText = leakRate.toFixed(1) + ' kg/m';
-
-            // Calculate Gas Loss Cost & Carbon Equivalent
-            const gasPricePerKg = 1200; // ~1,200 THB/kg
-            const yearlyLeakKg = leakRate * 12;
-            const yearlyFinancialLoss = yearlyLeakKg * gasPricePerKg;
-            const tCO2eLoss = (yearlyLeakKg * 23500) / 1000; // SF6 GWP = 23,500
-
-            document.getElementById('loss-cost-val').innerText = '฿' + yearlyFinancialLoss.toLocaleString('th-TH');
-            document.getElementById('loss-co2-val').innerText = Math.round(tCO2eLoss).toLocaleString('th-TH') + ' tCO₂e';
-
-            // Update Gas Quality Display
-            document.getElementById('val-purity').innerText = `${purity.toFixed(1)}% (≥99%)`;
-            document.getElementById('bar-purity').style.width = purity + '%';
-
-            // Update Active Chart
-            const currentNode = document.getElementById('chart-node-select').value;
-            if (nodeChartData[currentNode]) {
-                nodeChartData[currentNode].actual[5] = press;
-                nodeChartData[currentNode].predict[5] = press;
-                nodeChartData[currentNode].predict[6] = +(press - (leakRate * 0.05)).toFixed(2);
-                
-                chart.data.datasets[0].data = [...nodeChartData[currentNode].actual];
-                chart.data.datasets[1].data = [...nodeChartData[currentNode].predict];
-                chart.update();
-            }
-
-            // Update Table Row 2 Press
-            document.getElementById('tbl-press-2').innerText = press.toFixed(2) + ' Bar';
-        }
-
-        function resetSimulation() {
-            document.getElementById('sim-press').value = 6.12;
-            document.getElementById('sim-purity').value = 99.2;
-            document.getElementById('sim-leak').value = 1.5;
-            updateSimulation();
-        }
-
-        // Add GIS Substation Logic
-        function openAddGisModal() {
-            document.getElementById('add-gis-modal').classList.remove('hidden');
-        }
-
-        function closeAddGisModal() {
-            document.getElementById('add-gis-modal').classList.add('hidden');
-        }
-
-        function handleAddGis(e) {
-            e.preventDefault();
-            const name = document.getElementById('new-gis-name').value;
-            const press = parseFloat(document.getElementById('new-gis-press').value).toFixed(2);
-            const temp = parseFloat(document.getElementById('new-gis-temp').value).toFixed(1);
-
-            // Add node to dropdown selector for chart
-            const select = document.getElementById('chart-node-select');
-            const option = document.createElement('option');
-            option.value = name;
-            option.innerText = name;
-            select.appendChild(option);
-
-            // Add mock chart data for new node
-            nodeChartData[name] = {
-                actual: [parseFloat(press)+0.1, parseFloat(press)+0.08, parseFloat(press)+0.05, parseFloat(press)+0.03, parseFloat(press)+0.01, parseFloat(press), null],
-                predict: [null, null, null, null, null, parseFloat(press), +(parseFloat(press)-0.05).toFixed(2)]
-            };
-
-            let statusHtml = `<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium">${translations[currentLang].st_normal}</span>`;
-            let actionHtml = `<button onclick="viewNodeChart('${name}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded text-[10px] font-semibold"><i class="fa-solid fa-chart-line mr-1"></i>ดูพยากรณ์</button>`;
-
-            const tr = document.createElement('tr');
-            tr.className = "border-t border-slate-100 dark:border-slate-800";
-            tr.innerHTML = `
-                <td class="p-2.5 font-semibold">${name}</td>
-                <td class="p-2.5 text-emerald-600 dark:text-emerald-400 font-bold font-mono">${press} Bar</td>
-                <td class="p-2.5">${temp} °C</td>
-                <td class="p-2.5">${statusHtml}</td>
-                <td class="p-2.5">${actionHtml}</td>
-            `;
-
-            document.getElementById('table-body').appendChild(tr);
-            closeAddGisModal();
-            document.getElementById('new-gis-name').value = '';
-            document.getElementById('new-gis-press').value = '';
-            document.getElementById('new-gis-temp').value = '';
-        }
-
-        function filterTable() {
-            const input = document.getElementById('search-input').value.toLowerCase();
-            document.querySelectorAll('#table-body tr').forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none';
-            });
-        }
-
-        function simulateScanQR() {
-            const randomId = 'SF6-CYL-2026-' + Math.floor(100 + Math.random() * 900);
-            document.getElementById('cyl-id').innerText = randomId;
-            alert(`[Scan Successful] Registered Cylinder ID: ${randomId}`);
-        }
-
-        function issueJobOrder(name) {
-            alert(`[Job Order Created] Work order sent for compartment ${name}`);
-        }
-
-        function exportToExcel() {
-            const wb = XLSX.utils.table_to_book(document.getElementById('gis-data-table'));
-            XLSX.writeFile(wb, `EGAT_SF6_GIS_Report.xlsx`);
-        }
-
-        function exportToPDF() {
-            html2pdf().set({ margin: 0.3, filename: 'EGAT_SF6_Summary.pdf', html2canvas: { scale: 2 }, jsPDF: { format: 'a4', orientation: 'landscape' } }).from(document.getElementById('dashboard-content')).save();
-        }
-    </script>
+// calculator
+function calc(){var mA=+$('iI').value,T=+$('iT2').value,a=adc(mA);$('oI').textContent=mA.toFixed(2);$('oT2').textContent=T.toFixed(1);
+  $('cV').textContent=a.V.toFixed(3)+' V';$('cP').textContent=a.P.toFixed(3)+' bar';$('cP20').textContent=toP20(a.P,T).toFixed(3)+' bar'}
+$('iI').oninput=calc;$('iT2').oninput=calc;calc();
+update();
+})();
+</script>
 </body>
 </html>
