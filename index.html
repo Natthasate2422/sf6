@@ -59,7 +59,36 @@ input[type=number],input[type=text]{width:100%;padding:.3em .5em;border:1px soli
 table{width:100%;border-collapse:collapse}td{padding:.35em .2em;border-bottom:1px solid var(--line)}td:last-child{text-align:right}
 .note{font-size:.85em;color:var(--mute);margin:.5em 0 0}
 .f{font-family:ui-monospace,Menlo,monospace;background:var(--bg);padding:.5em .7em;border-radius:6px;margin:.4em 0;overflow-x:auto}
-@media(max-width:760px){.stage{width:100%;aspect-ratio:auto;overflow:visible}.in{height:auto;font-size:14px;padding:12px}.body,#mon.on,.two{grid-template-columns:1fr}.side{max-height:260px}.kpis{grid-template-columns:repeat(2,1fr)}.grid{display:flex;flex-direction:column}.slot{height:260px}.top{flex-wrap:wrap}.pane.on,#mon.on{overflow:visible}}
+.sm{display:none}#bays{position:relative}
+@media(max-width:820px){
+.page{align-items:flex-start;background:var(--bg)}
+.stage{width:100%;aspect-ratio:auto;overflow:visible;container-type:normal}
+.in{height:auto;font-size:15px;padding:10px 12px calc(84px + env(safe-area-inset-bottom,0px));gap:12px;-webkit-text-size-adjust:100%}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0;flex-wrap:wrap}
+h1{font-size:1.15em}h1 small{display:block;margin:0;font-size:.7em}
+.chips{gap:6px}.chip{font-size:.8em;padding:.2em .6em}
+.body{grid-template-columns:1fr;gap:12px}
+.side{overflow:visible}
+#bays{flex-direction:row!important;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}
+.bay{flex:0 0 auto;width:auto;min-width:158px;scroll-snap-align:start}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{border:0;background:transparent;font-size:.8em;padding:.5em .2em;min-height:44px;line-height:1.2}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-radius:8px}
+.lg{display:none}.sm{display:inline}
+.pane.on{overflow:visible}
+#mon.on{display:flex;flex-direction:column;gap:12px;overflow:visible}
+#mon .col{display:contents}
+.bar{order:1}#wo{order:2}.kpis{order:3}#grid{order:4}#sim{order:5}
+.kpis{grid-template-columns:1fr 1fr}.kpis .kpi:last-child{grid-column:1/-1}
+.kpi b{font-size:1.6em}
+.grid{display:flex;flex-direction:column;flex:none}
+.slot{height:270px}
+.two{grid-template-columns:1fr;gap:12px}
+button,.slot select{min-height:40px}.slot select{font-size:16px}
+input[type=number],input[type=text]{font-size:16px;min-height:40px}
+input[type=range]{height:30px}
+.cnt button{min-width:40px}
+}
 </style>
 </head>
 <body>
@@ -77,10 +106,10 @@ table{width:100%;border-collapse:collapse}td{padding:.35em .2em;border-bottom:1p
     <p class="note">กดเลือก Bay เพื่อดูรายละเอียดและจำลองค่า · ข้อมูลที่แก้ไขถูกเก็บในเบราว์เซอร์นี้ <a href="#" id="rst" style="color:var(--acc)">รีเซ็ต</a></p></aside>
   <div class="main">
     <div class="tabs" role="tablist">
-      <button role="tab" aria-selected="true" data-t="mon">ติดตามสถานะ</button>
-      <button role="tab" aria-selected="false" data-t="ref">เติมก๊าซและรายงาน</button>
+      <button role="tab" aria-selected="true" data-t="mon"><span class="lg">ติดตามสถานะ</span><span class="sm">ติดตาม</span></button>
+      <button role="tab" aria-selected="false" data-t="ref"><span class="lg">เติมก๊าซและรายงาน</span><span class="sm">เติมก๊าซ</span></button>
       <button role="tab" aria-selected="false" data-t="fin">ความคุ้มค่า</button>
-      <button role="tab" aria-selected="false" data-t="cal">สมการ / ADC</button>
+      <button role="tab" aria-selected="false" data-t="cal"><span class="lg">สมการ / ADC</span><span class="sm">สมการ</span></button>
     </div>
 
     <section id="mon" class="pane on">
@@ -98,7 +127,7 @@ table{width:100%;border-collapse:collapse}td{padding:.35em .2em;border-bottom:1p
         <div id="grid" class="grid n4"></div>
       </div>
       <div class="col">
-        <div class="card"><h2>จำลองสถานการณ์ (Bay ที่เลือก)</h2>
+        <div class="card" id="sim"><h2>จำลองสถานการณ์ (Bay ที่เลือก)</h2>
           <div class="row" style="margin:0"><button data-sc="ok">Normal</button><button data-sc="warn">Warning</button><button data-sc="crit">Critical</button></div>
           <label>ความดัน P₂₀ (bar)<output id="oP"></output></label><input id="iP" type="range" min="3.5" max="6.2" step="0.01">
           <label>อัตราการรั่ว (bar/วัน)<output id="oL"></output></label><input id="iL" type="range" min="0" max="0.06" step="0.001">
@@ -156,7 +185,7 @@ table{width:100%;border-collapse:collapse}td{padding:.35em .2em;border-bottom:1p
 (function(){
 var CRIT=4.7,WARN=5.4,FULL=6.0,GWP=23500,N=30,$=function(i){return document.getElementById(i)};
 var bays=[[5.92,.001,31],[5.85,.002,32],[5.25,.018,33],[4.62,.03,34],[5.95,0,31],[5.5,.012,32],[5.7,.004,33],[5.88,.002,30]].map(function(a,i){return{id:i+1,n:'Bay '+('0'+(i+1)).slice(-2),P:a[0],L:a[1],T:a[2]}});
-var sel=2,count=4,nextId=9,pick=['p20','p20','p20','p20','ptp','gas'],pickBay=[3,4,1,2,'sel','sel'];
+var sel=2,count=matchMedia('(max-width:820px)').matches?2:4,nextId=9,pick=['p20','p20','p20','p20','ptp','gas'],pickBay=[3,4,1,2,'sel','sel'];
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 function short(b){return b.n.replace(/^Bay\s*/i,'').slice(0,6)||b.n}
 function bayOf(v){if(v!=='sel')for(var i=0;i<bays.length;i++)if(bays[i].id===+v)return bays[i];return bays[sel]}
@@ -172,6 +201,7 @@ function derive(b,k){ // replace with real data (MQTT/InfluxDB)
   h[N-1]={T:b.T,PT:toPT(b.P,b.T),P20:b.P};b.h=h;b.r=reg(h.map(function(p){return p.P20}));b.m=b.r.m;
   b.days=b.m<-1e-6?Math.max(0,(b.P-CRIT)/Math.abs(b.m)):null;
   b.s=b.P<CRIT?'crit':(b.P<WARN||(b.days!==null&&b.days<=90))?'warn':'ok'}
+function dtxt(d){return d===null||d>365?'> 1 ปี':Math.round(d)+' วัน'}
 function mfull(){return +$('mfull').value||40}
 
 // ---- generic chart ----
@@ -214,18 +244,18 @@ function buildSlots(){var g=$('grid');g.className='grid n'+count;g.innerHTML='';
     sb.onchange=function(){pickBay[i]=this.value;save();paint()};
     sc.onchange=function(){pick[i]=this.value;sb.style.display=defs[this.value][2]?'none':'';save();paint()};g.appendChild(s)})(i)}
   document.querySelectorAll('#cnt button').forEach(function(b){b.setAttribute('aria-pressed',+b.dataset.n===count)});paint()}
-function paint(){document.querySelectorAll('#grid .slot').forEach(function(s,i){draw(s.querySelector('canvas'),defs[pick[i]][1](bayOf(pickBay[i])))})}
+function paint(){bays.forEach(derive);document.querySelectorAll('#grid .slot').forEach(function(s,i){draw(s.querySelector('canvas'),defs[pick[i]][1](bayOf(pickBay[i])))})}
 new ResizeObserver(function(){paint()}).observe($('grid'));
 document.querySelectorAll('#cnt button').forEach(function(b){b.onclick=function(){count=+b.dataset.n;save();buildSlots()}});
 
 // ---- UI ----
 function update(){bays.forEach(derive);var b=bays[sel],last=b.h[N-1],cn={ok:0,warn:0,crit:0};
   $('bays').innerHTML='';bays.forEach(function(x,i){cn[x.s]++;var e=document.createElement('button');e.className='bay';e.setAttribute('aria-pressed',i===sel);
-    e.innerHTML='<i class="dot d-'+x.s+'"></i><div><b>'+esc(x.n)+' · '+SN[x.s]+'</b><span>P₂₀ '+x.P.toFixed(2)+' bar · '+(x.days===null?'ไม่รั่ว':'เหลือ '+Math.round(x.days)+' วัน')+'</span></div>';
-    e.onclick=function(){sel=i;update()};$('bays').appendChild(e)});
+    e.innerHTML='<i class="dot d-'+x.s+'"></i><div><b>'+esc(x.n)+' · '+SN[x.s]+'</b><span>P₂₀ '+x.P.toFixed(2)+' bar · '+(x.days===null||x.days>365?'เหลือ > 1 ปี':'เหลือ '+Math.round(x.days)+' วัน')+'</span></div>';
+    e.onclick=function(){sel=i;update()};$('bays').appendChild(e)});var se=$('bays').children[sel];if(se)$('bays').scrollLeft=se.offsetLeft-($('bays').clientWidth-se.offsetWidth)/2;
   $('cOk').textContent='● เขียว '+cn.ok;$('cWarn').textContent='● เหลือง '+cn.warn;$('cCrit').textContent='● แดง '+cn.crit;
   $('bayTitle').textContent='230kV GIS · '+b.n;$('delBtn').disabled=bays.length<=1;save();$('badge').className='badge s-'+b.s;$('badge').textContent={ok:'Normal',warn:'เสี่ยง / เฝ้าระวัง',crit:'วิกฤติ / อันตราย'}[b.s];
-  $('kT').textContent=last.T.toFixed(1);$('kPT').textContent=last.PT.toFixed(2);$('kP20').textContent=b.P.toFixed(2);$('kM').textContent=b.m.toFixed(4);$('kD').textContent=b.days===null?'ไม่รั่ว':Math.round(b.days)+' วัน';
+  $('kT').textContent=last.T.toFixed(1);$('kPT').textContent=last.PT.toFixed(2);$('kP20').textContent=b.P.toFixed(2);$('kM').textContent=b.m.toFixed(4);$('kD').textContent=dtxt(b.days);
   $('iP').value=b.P;$('iL').value=b.L;$('iT').value=b.T;$('oP').textContent=b.P.toFixed(2);$('oL').textContent=b.L.toFixed(3);$('oT').textContent=b.T.toFixed(1);$('rbay').textContent=b.n;
   var w=$('wo');if(b.s==='ok'){w.hidden=true}else{var kg=Math.max(0,mfull()*(FULL-b.P)/FULL);w.hidden=false;w.className='card wo'+(b.s==='crit'?' crit':'');
     w.innerHTML='<h2>'+(b.s==='crit'?'แจ้งเตือนทันที: ใบสั่งงานฉุกเฉิน':'ใบสั่งงานดิจิทัล')+'</h2><table><tr><td>สถานที่</td><td>230kV GIS, '+esc(b.n)+'</td></tr><tr><td>P₂₀</td><td>'+b.P.toFixed(2)+' bar</td></tr><tr><td>เตรียมก๊าซเติมถึง 6.0 bar</td><td><b>'+kg.toFixed(1)+' kg</b></td></tr></table><p class="note">'+(b.s==='crit'?'เข้าหน้างานก่อนระบบป้องกันสั่ง Lockout / ทริป':'วางแผนเติมก๊าซและเข้าบำรุงรักษาประจำเดือน')+'</p>'}
@@ -235,7 +265,7 @@ document.querySelectorAll('[data-sc]').forEach(function(x){x.onclick=function(){
 $('mfull').oninput=update;
 $('theme').onclick=function(){var r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark';paint()};
 document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.tabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
-  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id===b.dataset.t)});paint()}});
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id===b.dataset.t)});window.scrollTo(0,0);paint()}});
 
 // add / delete bay
 $('addBtn').onclick=function(){var f=$('addForm');f.hidden=!f.hidden;$('aN').value='Bay '+('0'+nextId).slice(-2)};
